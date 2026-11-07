@@ -1,34 +1,47 @@
-
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ShieldCheck,
-  ShieldAlert,
   Camera,
   LoaderCircle,
-  RotateCcw,
-  LockKeyhole,
+  Sparkles,
 } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
+import type { BackendScanResponse } from "../types/scan";
+import { scanUrl } from "../services/scanService";
+import SecurityReport from "./SecurityReport";
 
-type ScanState = "scanning" | "loading" | "result";
-type SecurityStatus = "SAFE" | "DANGEROUS";
+interface ScannerProps {
+  onScanComplete?: (response: BackendScanResponse) => void;
+}
 
-export default function Scanner() {
-  const [scanState, setScanState] = useState<ScanState>("scanning");
-  const [securityStatus, setSecurityStatus] =
-    useState<SecurityStatus>("SAFE");
-  const [scannedUrl, setScannedUrl] = useState("");
-  const [resultMessage, setResultMessage] = useState("");
+export default function Scanner({ onScanComplete }: ScannerProps) {
+  const [scanState, setScanState] = useState<"idle" | "scanning" | "analyzing" | "result">("scanning");
   const [cameraError, setCameraError] = useState("");
-  const [scanError, setScanError] = useState("");
+  const [scanResult, setScanResult] = useState<BackendScanResponse | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const startingRef = useRef(false);
   const processedRef = useRef(false);
 
+  const handleProcessUrl = useCallback(
+    async (url: string) => {
+      setScanState("analyzing");
+      try {
+        const response = await scanUrl(url);
+        setScanResult(response);
+        setScanState("result");
+        if (onScanComplete) {
+          onScanComplete(response);
+        }
+      } catch {
+        setScanState("result");
+      }
+    },
+    [onScanComplete]
+  );
+
   useEffect(() => {
     let cancelled = false;
 
-    async function startScanner() {
+    async function startCamera() {
       if (startingRef.current) return;
       startingRef.current = true;
 
@@ -41,78 +54,25 @@ export default function Scanner() {
           { fps: 10, qrbox: { width: 220, height: 220 } },
           async (decodedText) => {
             if (cancelled || processedRef.current) return;
-
             processedRef.current = true;
-            setScannedUrl(decodedText);
-            setScanError("");
-            setScanState("loading");
 
             try {
               if (scanner.isScanning) {
                 await scanner.stop();
               }
             } catch {
-              // The scanner may already have stopped.
+              // Ignore stop errors
             }
 
             if (cancelled) return;
-
-            try {
-              const response = await fetch(
-                "http://localhost:8081/api/scan",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ url: decodedText }),
-                }
-              );
-
-              if (!response.ok) {
-                throw new Error("Backend request failed");
-              }
-
-              const result: {
-                url: string;
-                status: SecurityStatus;
-                message: string;
-              } = await response.json();
-
-              if (
-                result.status !== "SAFE" &&
-                result.status !== "DANGEROUS"
-              ) {
-                throw new Error("Unexpected backend response");
-              }
-
-              if (cancelled) return;
-
-              setSecurityStatus(result.status);
-              setResultMessage(result.message);
-              setScanState("result");
-            } catch {
-              if (cancelled) return;
-
-              setScanError(
-                "Could not connect to the security checker. Make sure the backend is running on port 8081."
-              );
-              setScanState("result");
-            }
+            await handleProcessUrl(decodedText);
           },
-          () => {
-            // Ignore frames where no QR code is detected.
-          }
+          () => {}
         );
-
-        if (cancelled && scanner.isScanning) {
-          await scanner.stop();
-          await scanner.clear();
-        }
       } catch {
         if (!cancelled) {
           setCameraError(
-            "Camera access failed. Allow camera permission and try again."
+            "Camera access was blocked or not found. You can allow camera permissions or test with the synthetic QR samples below."
           );
         }
       } finally {
@@ -121,178 +81,135 @@ export default function Scanner() {
     }
 
     if (scanState === "scanning") {
-      void startScanner();
+      void startCamera();
     }
 
     return () => {
       cancelled = true;
       const scanner = scannerRef.current;
-
       if (scanner) {
         void (async () => {
           try {
-            if (scanner.isScanning) {
-              await scanner.stop();
-            }
-          } catch {
-            // Ignore cleanup errors.
-          }
-
+            if (scanner.isScanning) await scanner.stop();
+          } catch {}
           try {
             await scanner.clear();
-          } catch {
-            // The scanner may already be cleared.
-          }
-
-          if (scannerRef.current === scanner) {
-            scannerRef.current = null;
-          }
+          } catch {}
+          if (scannerRef.current === scanner) scannerRef.current = null;
         })();
       }
     };
-  }, [scanState]);
+  }, [scanState, handleProcessUrl]);
 
-  function resetScanner() {
+  function handleReset() {
+    setScanResult(null);
     setCameraError("");
-    setScanError("");
-    setScannedUrl("");
-    setResultMessage("");
-    setSecurityStatus("SAFE");
     processedRef.current = false;
     setScanState("scanning");
   }
 
+  // Quick synthetic QR simulation for hackathon demo on desktops
+  const handleSyntheticScan = async (mockUrl: string) => {
+    processedRef.current = true;
+    const scanner = scannerRef.current;
+    if (scanner && scanner.isScanning) {
+      try {
+        await scanner.stop();
+      } catch {}
+    }
+    await handleProcessUrl(mockUrl);
+  };
+
+  if (scanState === "result" && scanResult) {
+    return <SecurityReport report={scanResult} onReset={handleReset} />;
+  }
+
   return (
-    <section className="relative w-full text-zinc-800">
-        <div className="rounded-2xl border border-emerald-900/10 bg-[#0b1f18] p-5 text-zinc-100 shadow-sm sm:p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold">QR Security Scanner</h2>
-              <p className="mt-1 text-xs text-zinc-400">
-                Every link deserves a security check.
-              </p>
-            </div>
-
-            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs text-emerald-400">
-              ● Protected
-            </span>
-          </div>
-
-          {scanState === "scanning" && (
-            <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60">
-              <div
-                id="qr-reader"
-                className="h-full w-full overflow-hidden rounded-2xl"
-              />
-
-              {cameraError && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950 p-6 text-center">
-                  <Camera className="h-10 w-10 text-red-400" />
-                  <p className="text-sm text-red-300">{cameraError}</p>
-                  <button
-                    onClick={resetScanner}
-                    className="rounded-xl border border-white/10 px-4 py-2 text-sm hover:bg-white/10"
-                  >
-                    Try again
-                  </button>
-                </div>
-              )}
-
-              {!cameraError && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="relative h-56 w-56">
-                    <div className="absolute left-0 top-0 h-10 w-10 rounded-tl-xl border-l-2 border-t-2 border-emerald-400" />
-                    <div className="absolute right-0 top-0 h-10 w-10 rounded-tr-xl border-r-2 border-t-2 border-emerald-400" />
-                    <div className="absolute bottom-0 left-0 h-10 w-10 rounded-bl-xl border-b-2 border-l-2 border-emerald-400" />
-                    <div className="absolute bottom-0 right-0 h-10 w-10 rounded-br-xl border-b-2 border-r-2 border-emerald-400" />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {scanState === "loading" && (
-            <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-black/60">
-              <LoaderCircle className="mb-5 h-12 w-12 animate-spin text-emerald-400" />
-              <p className="font-medium">Checking your link...</p>
-              <p className="mt-2 text-sm text-zinc-500">
-                Sending URL to the security checker
-              </p>
-            </div>
-          )}
-
-          {scanState === "result" && (
-            <div
-              className={`rounded-2xl border p-5 ${
-                scanError
-                  ? "border-amber-400/30 bg-amber-400/[0.07]"
-                  : securityStatus === "SAFE"
-                    ? "border-emerald-400/30 bg-emerald-400/[0.07]"
-                    : "border-red-400/30 bg-red-400/[0.07]"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                {scanError ? (
-                  <ShieldAlert className="h-10 w-10 text-amber-400" />
-                ) : securityStatus === "SAFE" ? (
-                  <ShieldCheck className="h-10 w-10 text-emerald-400" />
-                ) : (
-                  <ShieldAlert className="h-10 w-10 text-red-400" />
-                )}
-
-                <div>
-                  <h3
-                    className={`font-bold ${
-                      scanError
-                        ? "text-amber-400"
-                        : securityStatus === "SAFE"
-                          ? "text-emerald-400"
-                          : "text-red-400"
-                    }`}
-                  >
-                    {scanError
-                      ? "Security check unavailable"
-                      : securityStatus === "SAFE"
-                        ? "Link passed basic checks"
-                        : "Suspicious link detected"}
-                  </h3>
-                  <p className="mt-1 text-xs text-zinc-400">
-                    {scanError
-                      ? scanError
-                      : resultMessage ||
-                        "The security checker returned a result."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-xl border border-white/10 bg-black/30 p-3">
-                <p className="mb-2 text-xs text-zinc-500">
-                  SCANNED URL / TEXT
-                </p>
-                <p className="break-all text-sm">{scannedUrl}</p>
-              </div>
-
-              <button
-                onClick={resetScanner}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm hover:bg-white/10"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Scan another QR code
-              </button>
-            </div>
-          )}
-
-          <div className="mt-5 flex items-center gap-3 rounded-xl border border-white/5 bg-black/20 p-3">
-            <LockKeyhole className="h-5 w-5 shrink-0 text-zinc-500" />
-            <p className="text-xs leading-5 text-zinc-400">
-              Check the destination before deciding to open a link.
-            </p>
-          </div>
+    <div className="rounded-2xl border border-emerald-900/10 bg-[#0b1f18] p-5 text-zinc-100 shadow-sm sm:p-6">
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <h3 className="font-semibold text-white">QR Security Scanner</h3>
+          <p className="mt-0.5 text-xs text-zinc-400">
+            Real-time optical destination verification
+          </p>
         </div>
 
-        <p className="mt-5 text-center text-xs text-zinc-500">
-          Uses the existing /api/scan checker when the backend is running.
-        </p>
-    </section>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+          Active Shield
+        </span>
+      </div>
+
+      {scanState === "scanning" && (
+        <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60">
+          <div id="qr-reader" className="h-full w-full overflow-hidden rounded-2xl" />
+
+          {cameraError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950/95 p-6 text-center">
+              <Camera className="h-10 w-10 text-amber-400" />
+              <p className="text-xs text-zinc-300 leading-relaxed max-w-xs">{cameraError}</p>
+              <button
+                onClick={handleReset}
+                className="mt-2 rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold hover:bg-white/20"
+              >
+                Retry Camera
+              </button>
+            </div>
+          ) : (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="relative h-56 w-56">
+                <div className="absolute left-0 top-0 h-8 w-8 rounded-tl-xl border-l-2 border-t-2 border-emerald-400" />
+                <div className="absolute right-0 top-0 h-8 w-8 rounded-tr-xl border-r-2 border-t-2 border-emerald-400" />
+                <div className="absolute bottom-0 left-0 h-8 w-8 rounded-bl-xl border-b-2 border-l-2 border-emerald-400" />
+                <div className="absolute bottom-0 right-0 h-8 w-8 rounded-br-xl border-b-2 border-r-2 border-emerald-400" />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {scanState === "analyzing" && (
+        <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-black/60 p-6 text-center">
+          <LoaderCircle className="mb-4 h-12 w-12 animate-spin text-emerald-400" />
+          <h4 className="font-semibold text-white">Extracting &amp; Analyzing Link</h4>
+          <p className="mt-1 text-xs text-zinc-400 max-w-xs">
+            Running 6-layer heuristic analysis and threat intelligence checks...
+          </p>
+        </div>
+      )}
+
+      {/* Synthetic QR Code Simulators for Desktop Hackathon Evaluation */}
+      <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300">
+          <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+          Test Optical QR Scenarios (Desktop Simulator)
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+          <button
+            onClick={() => handleSyntheticScan("https://www.wikipedia.org")}
+            className="rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-left text-zinc-300 hover:border-emerald-400/50 hover:bg-white/10"
+          >
+            <span className="block font-medium text-emerald-400">QR: Official Site</span>
+            <span className="text-[10px] text-zinc-500">wikipedia.org</span>
+          </button>
+
+          <button
+            onClick={() => handleSyntheticScan("https://amaz0n-security-portal.xyz/verify")}
+            className="rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-left text-zinc-300 hover:border-amber-400/50 hover:bg-white/10"
+          >
+            <span className="block font-medium text-amber-400">QR: Lookalike Fake</span>
+            <span className="text-[10px] text-zinc-500">amaz0n.xyz</span>
+          </button>
+
+          <button
+            onClick={() => handleSyntheticScan("https://testsafebrowsing.appspot.com/malware")}
+            className="rounded-lg border border-white/10 bg-black/40 px-2.5 py-1.5 text-left text-zinc-300 hover:border-rose-400/50 hover:bg-white/10"
+          >
+            <span className="block font-medium text-rose-400">QR: Malicious Test</span>
+            <span className="text-[10px] text-zinc-500">Google SafeBrowsing demo</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

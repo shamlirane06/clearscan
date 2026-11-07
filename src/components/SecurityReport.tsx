@@ -9,7 +9,6 @@ import {
   Copy,
   Check,
   RotateCcw,
-  ExternalLink,
   ChevronDown,
   ChevronUp,
   Cpu,
@@ -36,7 +35,6 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
   const isCritical = report.riskScore >= 75 || report.riskClassification === "CRITICAL_RISK";
   const isHigh = report.riskScore >= 50 && report.riskScore < 75;
   const isModerate = report.riskScore >= 25 && report.riskScore < 50;
-  const isLow = report.riskScore >= 0 && report.riskScore < 25;
   const isUnable = report.riskClassification === "UNABLE_TO_VERIFY";
 
   return (
@@ -143,7 +141,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
 
           <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-zinc-500">
             <Clock className="h-3.5 w-3.5" />
-            {new Date(report.timestamp || Date.now()).toLocaleTimeString([], {
+            {new Date(report.timestamp).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
               second: "2-digit",

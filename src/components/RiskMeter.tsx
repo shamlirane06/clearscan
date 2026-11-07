@@ -11,24 +11,19 @@ export default function RiskMeter({ score, classification, size = "md" }: RiskMe
   const displayScore = isUnableToVerify ? "—" : Math.max(0, Math.min(100, score));
 
   // Determine color theme based on score / classification
-  let colorClass = "text-emerald-500 stroke-emerald-500 bg-emerald-50 text-emerald-900 border-emerald-200";
   let label = "Low Risk";
   let badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
 
   if (isUnableToVerify) {
-    colorClass = "text-zinc-400 stroke-zinc-400 bg-zinc-50 text-zinc-700 border-zinc-200";
     label = "Unable to Verify";
     badgeColor = "bg-zinc-100 text-zinc-700 border-zinc-300";
   } else if (score >= 75) {
-    colorClass = "text-rose-600 stroke-rose-600 bg-rose-50 text-rose-900 border-rose-200";
     label = "Critical Risk";
     badgeColor = "bg-rose-100 text-rose-800 border-rose-300";
   } else if (score >= 50) {
-    colorClass = "text-amber-600 stroke-amber-600 bg-amber-50 text-amber-900 border-amber-200";
     label = "High Risk";
     badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
   } else if (score >= 25) {
-    colorClass = "text-amber-500 stroke-amber-500 bg-amber-50/70 text-amber-900 border-amber-200";
     label = "Moderate Risk";
     badgeColor = "bg-amber-50 text-amber-800 border-amber-200";
   }
