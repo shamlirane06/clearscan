@@ -10,9 +10,9 @@ export default function AboutPage() {
             <ShieldCheck className="h-6 w-6" />
           </span>
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              System Architecture &amp; Specifications
-            </h2>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              How ClearScan checks a link
+            </h1>
             <p className="text-xs font-semibold text-teal-400 uppercase tracking-wider mt-0.5">
               Zero-Trust Verification Engine &bull; Scan Before You Trust
             </p>
@@ -20,9 +20,7 @@ export default function AboutPage() {
         </div>
 
         <p className="text-sm leading-relaxed text-slate-300">
-          ClearScan is an intelligent, multi-layer QR code and destination inspection engine engineered
-          for proactive cybersecurity defense. It prevents credential harvesting, payment reverse-intent fraud,
-          and zero-trust bypasses across enterprise workstations and citizen mobile touchpoints.
+          ClearScan reviews QR destinations and unfamiliar links for common warning signs. It combines explainable local checks with the threat-intelligence response when the service is available. A low-risk result is context for your decision, not a guarantee of safety.
         </p>
       </div>
 
@@ -30,9 +28,9 @@ export default function AboutPage() {
       <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-7 shadow-sm space-y-5">
         <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3.5">
           <Layers className="h-5 w-5 text-teal-400" />
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-200">
-            6-Layer Heuristic &amp; Threat Intelligence Pipeline
-          </h3>
+          <h2 className="text-xl font-semibold text-slate-200 sm:text-2xl">
+            Six layers of link inspection
+          </h2>
         </div>
 
         <div className="grid gap-3.5 sm:grid-cols-2 text-xs">
@@ -41,7 +39,7 @@ export default function AboutPage() {
               <span className="flex h-5 w-5 items-center justify-center rounded bg-teal-500/15 text-[11px] font-bold text-teal-300">
                 1
               </span>
-              <h4 className="font-semibold text-sm text-slate-200">URL &amp; SSRF Network Guard</h4>
+              <h3 className="font-semibold text-sm text-slate-200">URL &amp; SSRF Network Guard</h3>
             </div>
             <p className="text-slate-400 leading-relaxed">
               Enforces HTTP/HTTPS protocol integrity, detects raw IPv4/IPv6, blocks internal subnets (<code className="font-mono text-teal-300">127.0.0.1</code>, RFC 1918), and detects obfuscated percent-encoding.
@@ -53,7 +51,7 @@ export default function AboutPage() {
               <span className="flex h-5 w-5 items-center justify-center rounded bg-teal-500/15 text-[11px] font-bold text-teal-300">
                 2
               </span>
-              <h4 className="font-semibold text-sm text-slate-200">Domain Reputation &amp; TLD Analyzer</h4>
+              <h3 className="font-semibold text-sm text-slate-200">Domain Reputation &amp; TLD Analyzer</h3>
             </div>
             <p className="text-slate-400 leading-relaxed">
               Audits deep subdomains (&gt;4 levels), high-risk phishing keywords (kyc, verify, secure, banking), and high-abuse top-level domains (<code className="font-mono text-teal-300">.xyz</code>, <code className="font-mono text-teal-300">.tk</code>, <code className="font-mono text-teal-300">.top</code>).
@@ -65,7 +63,7 @@ export default function AboutPage() {
               <span className="flex h-5 w-5 items-center justify-center rounded bg-teal-500/15 text-[11px] font-bold text-teal-300">
                 3
               </span>
-              <h4 className="font-semibold text-sm text-slate-200">Typosquatting &amp; Brand Containment</h4>
+              <h3 className="font-semibold text-sm text-slate-200">Typosquatting &amp; Brand Containment</h3>
             </div>
             <p className="text-slate-400 leading-relaxed">
               Algorithmic character substitution mapping (g00gle, amaz0n), unauthorized brand inclusion in subdomains, and Punycode (<code className="font-mono text-teal-300">xn--</code>) homograph attacks.
@@ -77,7 +75,7 @@ export default function AboutPage() {
               <span className="flex h-5 w-5 items-center justify-center rounded bg-teal-500/15 text-[11px] font-bold text-teal-300">
                 4
               </span>
-              <h4 className="font-semibold text-sm text-slate-200">Redirect &amp; Shortener Cloaking</h4>
+              <h3 className="font-semibold text-sm text-slate-200">Redirect &amp; Shortener Cloaking</h3>
             </div>
             <p className="text-slate-400 leading-relaxed">
               Flags masked redirect services (<code className="font-mono text-teal-300">bit.ly</code>, <code className="font-mono text-teal-300">tinyurl</code>, <code className="font-mono text-teal-300">t.co</code>) so users are never navigated blindly to uninspected endpoints.
@@ -89,7 +87,7 @@ export default function AboutPage() {
               <span className="flex h-5 w-5 items-center justify-center rounded bg-teal-500/15 text-[11px] font-bold text-teal-300">
                 5
               </span>
-              <h4 className="font-semibold text-sm text-slate-200">URL Structural Anatomy</h4>
+              <h3 className="font-semibold text-sm text-slate-200">URL Structural Anatomy</h3>
             </div>
             <p className="text-slate-400 leading-relaxed">
               Audits excessive URL length (&gt;200 chars), deceptive <code className="font-mono text-teal-300">@</code> symbol authorities, excessive query parameters (&gt;10), and sensitive credential path keywords.
@@ -101,7 +99,7 @@ export default function AboutPage() {
               <span className="flex h-5 w-5 items-center justify-center rounded bg-teal-500/15 text-[11px] font-bold text-teal-300">
                 6
               </span>
-              <h4 className="font-semibold text-sm text-slate-200">Threat Feeds &amp; Safe Browsing</h4>
+              <h3 className="font-semibold text-sm text-slate-200">Threat Feeds &amp; Safe Browsing</h3>
             </div>
             <p className="text-slate-400 leading-relaxed">
               Spring Boot backend integration with Google Safe Browsing API v4, with automatic fail-safe fallback to deterministic heuristic evaluation.
@@ -114,9 +112,9 @@ export default function AboutPage() {
       <div className="rounded-2xl border border-slate-800 bg-slate-950 p-6 space-y-3">
         <div className="flex items-center gap-2 text-amber-400">
           <AlertTriangle className="h-5 w-5" />
-          <h3 className="text-sm font-semibold">
+          <h2 className="text-sm font-semibold">
             Zero-Trust Disclosure &amp; Heuristic Limitations
-          </h3>
+          </h2>
         </div>
         <ul className="space-y-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
           <li className="flex items-start gap-2">
@@ -136,9 +134,9 @@ export default function AboutPage() {
 
       {/* Emergency Incident Response Hotline */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 space-y-4">
-        <h3 className="text-sm font-semibold text-white">
+        <h2 className="text-sm font-semibold text-white">
           Emergency Incident Reporting
-        </h3>
+        </h2>
         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
           If you have been targeted by online fraud, financial deception, or unauthorized UPI transfers, contact the official cybercrime authorities immediately:
         </p>

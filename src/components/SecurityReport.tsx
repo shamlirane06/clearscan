@@ -80,9 +80,9 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
               </span>
             </div>
 
-            <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
               {report.normalizedHostname || "Unresolved Destination"}
-            </h3>
+            </h2>
 
             <p className="max-w-xl text-sm leading-relaxed text-slate-300">
               {report.riskMessage || report.message}
@@ -200,10 +200,10 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
               : "border-emerald-500/20 bg-emerald-950/20 text-emerald-200"
           }`}
         >
-          <h4 className="flex items-center gap-2 text-sm font-semibold">
+          <h3 className="flex items-center gap-2 text-sm font-semibold">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             <span>Recommended Mitigation Action</span>
-          </h4>
+          </h3>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             {report.recommendedAction ||
               "Destination passed heuristic scrutiny. Always confirm sensitive transactions directly inside official mobile banking apps."}
@@ -213,9 +213,9 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
         {/* Active Security Warnings */}
         {report.warnings && report.warnings.length > 0 && (
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
               Active Security Warnings ({report.warnings.length})
-            </h4>
+            </h3>
             <div className="space-y-2">
               {report.warnings.map((warn, index) => (
                 <div
@@ -238,9 +238,9 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
               className="flex w-full items-center justify-between text-left group rounded-xl p-2 -mx-2 hover:bg-slate-800/40 transition-colors"
             >
               <div>
-                <h4 className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">
+                <h3 className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">
                   Multi-Layer Inspection Telemetry ({report.securityChecks.length} Checks)
-                </h4>
+                </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Granular evaluation logs across protocol, reputation, typosquatting, and threat feeds.
                 </p>

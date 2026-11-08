@@ -1,0 +1,54 @@
+{
+  "layoutViewport": {
+    "pageX": 0,
+    "pageY": 0,
+    "clientWidth": 768,
+    "clientHeight": 900
+  },
+  "visualViewport": {
+    "offsetX": 0,
+    "offsetY": 0,
+    "pageX": 0,
+    "pageY": 0,
+    "clientWidth": 768,
+    "clientHeight": 900,
+    "scale": 1,
+    "zoom": 1
+  },
+  "cssContentSize": {
+    "x": 0,
+    "y": 0,
+    "width": 768,
+    "height": 2509
+  },
+  "observed": {
+    "cls": 0.05074545880855356,
+    "shifts": [
+      {
+        "value": 0.05074545880855356,
+        "startTime": 651.7999999970198
+      }
+    ],
+    "longTasks": [
+      {
+        "duration": 101,
+        "startTime": 289
+      },
+      {
+        "duration": 63,
+        "startTime": 398.70000000298023
+      },
+      {
+        "duration": 123,
+        "startTime": 462.29999999701977
+      }
+    ],
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "innerWidth": 768,
+    "innerHeight": 900,
+    "visualViewportWidth": 768,
+    "hasViewportMeta": true,
+    "horizontalOverflowPx": 0
+  }
+}

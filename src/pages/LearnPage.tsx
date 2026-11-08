@@ -65,12 +65,12 @@ export default function LearnPage() {
         <div>
           <div className="flex items-center gap-2.5">
             <GraduationCap className="h-5 w-5 text-teal-400" />
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Threat Intelligence &amp; Academy
-            </h2>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              Learn to spot common scams
+            </h1>
           </div>
           <p className="mt-1 text-sm text-slate-400">
-            Advisories on quishing mechanics, reverse-intent payment fraud, and interactive phishing simulations
+            Short, practical briefings and a five-question quiz for spotting common scams.
           </p>
         </div>
 
@@ -78,6 +78,7 @@ export default function LearnPage() {
         <div className="inline-flex rounded-xl border border-slate-800 bg-slate-900/60 p-1">
           <button
             onClick={() => setActiveTab("modules")}
+            aria-pressed={activeTab === "modules"}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
               activeTab === "modules"
                 ? "bg-slate-800 text-white shadow-sm border border-slate-700/60"
@@ -89,6 +90,7 @@ export default function LearnPage() {
           </button>
           <button
             onClick={() => setActiveTab("quiz")}
+            aria-pressed={activeTab === "quiz"}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
               activeTab === "quiz"
                 ? "bg-slate-800 text-white shadow-sm border border-slate-700/60"
@@ -105,13 +107,14 @@ export default function LearnPage() {
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           {/* Topics Navigation Sidebar */}
           <div className="space-y-1.5">
-            <h3 className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <h2 className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
               Security Briefing Topics
-            </h3>
+            </h2>
             {SAFETY_TOPICS.map((topic) => (
               <button
                 key={topic.id}
                 onClick={() => setSelectedTopicId(topic.id)}
+                aria-pressed={selectedTopicId === topic.id}
                 className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-medium transition-colors ${
                   selectedTopicId === topic.id
                     ? "border border-slate-700 bg-slate-800 text-white shadow-sm"
@@ -130,14 +133,14 @@ export default function LearnPage() {
               <span className="inline-flex rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-0.5 text-xs font-medium text-teal-300">
                 {activeTopic.category}
               </span>
-              <h3 className="mt-3 text-xl sm:text-2xl font-bold text-white tracking-tight">{activeTopic.title}</h3>
+              <h2 className="mt-3 text-xl sm:text-2xl font-bold text-white tracking-tight">{activeTopic.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-300">{activeTopic.summary}</p>
             </div>
 
             <div className="border-t border-slate-800 pt-5 space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
                 Key Attack Vectors &amp; Threat Mechanics
-              </h4>
+              </h3>
               <ul className="space-y-2.5">
                 {activeTopic.keyPoints.map((point, idx) => (
                   <li key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -149,10 +152,10 @@ export default function LearnPage() {
             </div>
 
             <div className="rounded-xl border border-teal-500/25 bg-teal-950/20 p-4">
-              <h5 className="flex items-center gap-2 text-xs font-semibold text-teal-300">
+              <h3 className="flex items-center gap-2 text-xs font-semibold text-teal-300">
                 <Lightbulb className="h-4 w-4" />
                 <span>Zero-Trust Security Principle</span>
-              </h5>
+              </h3>
               <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-300">
                 {activeTopic.takeaway}
               </p>
@@ -169,14 +172,14 @@ export default function LearnPage() {
                   <span className="text-xs font-semibold text-teal-400">
                     Scenario {currentQuestionIndex + 1} of {PHISHING_QUIZ_QUESTIONS.length}
                   </span>
-                  <span className="rounded-md border border-slate-700 bg-slate-850 px-2.5 py-1 text-xs font-medium text-slate-300">
+                  <span className="rounded-md border border-slate-700 bg-slate-900/80 px-2.5 py-1 text-xs font-medium text-slate-300">
                     Score: {score}/{PHISHING_QUIZ_QUESTIONS.length}
                   </span>
                 </div>
 
-                <h3 className="text-base sm:text-lg font-medium text-white leading-relaxed">
+                <h2 className="text-base sm:text-lg font-medium text-white leading-relaxed">
                   {currentQuestion.question}
-                </h3>
+                </h2>
 
                 <div className="space-y-2.5">
                   {currentQuestion.options.map((option, idx) => {
@@ -198,6 +201,7 @@ export default function LearnPage() {
                       <button
                         key={idx}
                         onClick={() => handleSelectOption(idx)}
+                        aria-pressed={isSelected}
                         disabled={isAnswerSubmitted}
                         className={`flex w-full items-start gap-3.5 rounded-xl border p-3.5 text-left text-xs sm:text-sm transition-colors ${btnClass}`}
                       >
@@ -217,9 +221,9 @@ export default function LearnPage() {
                 </div>
 
                 {isAnswerSubmitted && (
-                  <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs sm:text-sm text-slate-300 space-y-1.5">
+                  <div aria-live="polite" className="rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs sm:text-sm text-slate-300 space-y-1.5">
                     <p className="font-semibold text-slate-400">
-                      Technical Explanation:
+                      {selectedAnswer === currentQuestion.correctIndex ? "Correct answer." : "That answer is not correct."} Explanation:
                     </p>
                     <p className="leading-relaxed text-slate-300">{currentQuestion.explanation}</p>
                   </div>
@@ -230,14 +234,14 @@ export default function LearnPage() {
                     <button
                       onClick={handleSubmitAnswer}
                       disabled={selectedAnswer === null}
-                      className="rounded-xl bg-teal-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="ink-action rounded-lg px-5 py-2.5 text-xs font-semibold shadow-sm transition-colors disabled:cursor-not-allowed"
                     >
                       Submit Answer
                     </button>
                   ) : (
                     <button
                       onClick={handleNextQuestion}
-                      className="rounded-xl bg-teal-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-teal-500"
+                      className="ink-action rounded-lg px-5 py-2.5 text-xs font-semibold shadow-sm transition-colors"
                     >
                       {currentQuestionIndex + 1 < PHISHING_QUIZ_QUESTIONS.length
                         ? "Next Scenario"
@@ -252,7 +256,7 @@ export default function LearnPage() {
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-teal-500/30 bg-teal-500/10 text-teal-400">
                   <ShieldCheck className="h-7 w-7" />
                 </div>
-                <h3 className="text-2xl font-bold text-white">Evaluation Completed</h3>
+                <h2 className="text-2xl font-bold text-white">Evaluation Completed</h2>
                 <p className="text-sm text-slate-300">
                   You correctly identified <strong className="text-teal-400 font-bold">{score}</strong> out of{" "}
                   <strong>{PHISHING_QUIZ_QUESTIONS.length}</strong> threat scenarios.

@@ -37,6 +37,21 @@ export function validateAndNormalizeUrl(input: string): ValidationResult {
 
     const host = parsed.hostname.toLowerCase();
 
+    // `URL` accepts whitespace in hostnames by percent-encoding it, even
+    // though those values cannot resolve as ordinary web destinations.
+    if (
+      !host ||
+      host.includes("%") ||
+      /\s/.test(host) ||
+      !/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:\.(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?))*\.?$|^\[[0-9a-f:]+\]$/i.test(host)
+    ) {
+      return {
+        isValid: false,
+        normalizedUrl: fullUrl,
+        errorMessage: "Invalid web address. Check the destination and try again.",
+      };
+    }
+
     // SSRF / Localhost prevention
     if (
       host === "localhost" ||

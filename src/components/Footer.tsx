@@ -10,12 +10,11 @@ export default function Footer() {
               <ShieldCheck className="h-4 w-4" />
             </span>
             <span className="text-sm font-semibold text-white tracking-tight">
-              ClearScan &bull; Zero-Trust Destination Intelligence
+              ClearScan &bull; Scan before you trust
             </span>
           </div>
           <p className="max-w-lg text-xs leading-relaxed text-slate-400">
-            Engineered for proactive zero-trust defense against quishing, disguised payment mandates,
-            and typosquatted credential harvesting before navigation.
+            Check QR destinations and unfamiliar links for warning signs before you open them.
           </p>
           <div className="flex items-center gap-4 pt-1 text-xs text-slate-400">
             <span className="flex items-center gap-1.5">

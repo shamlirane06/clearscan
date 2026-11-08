@@ -54,9 +54,9 @@ export default function SecurityCheckItem({ check }: SecurityCheckItemProps) {
             )}
           </div>
           <div className="space-y-1">
-            <h5 className="text-sm font-medium text-slate-200">
+            <h4 className="text-sm font-medium text-slate-200">
               {check.checkName}
-            </h5>
+            </h4>
             <p className="text-xs leading-relaxed text-slate-400">{check.explanation}</p>
 
             {check.evidence && (

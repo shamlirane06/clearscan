@@ -31,6 +31,12 @@ describe("URL Validation & SSRF Sanitization Utilities", () => {
     expect(emptyRes.errorMessage).toContain("Please enter a URL");
   });
 
+  it("should reject whitespace encoded into a hostname", () => {
+    const result = validateAndNormalizeUrl("not a url");
+    expect(result.isValid).toBe(false);
+    expect(result.errorMessage).toMatch(/valid web address/i);
+  });
+
   it("should block localhost and loopback addresses to prevent SSRF", () => {
     const localhostRes = validateAndNormalizeUrl("http://localhost:8080/admin");
     expect(localhostRes.isValid).toBe(false);

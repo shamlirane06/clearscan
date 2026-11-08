@@ -133,9 +133,9 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
         <div>
           <div className="flex items-center gap-2">
             <Scan className="h-4 w-4 text-teal-400" />
-            <h3 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-100">
               Optical QR Scanner
-            </h3>
+            </h2>
           </div>
           <p className="mt-0.5 text-xs text-slate-400">
             Real-time payload extraction &amp; destination verification
@@ -145,7 +145,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-0.5 text-xs font-medium text-teal-300">
             <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-            Scanner Active
+            QR camera
           </span>
         </div>
       </div>
@@ -204,9 +204,9 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
       {scanState === "analyzing" && (
         <div className="flex aspect-square sm:aspect-[4/3] max-h-[360px] w-full flex-col items-center justify-center rounded-xl border border-slate-800 bg-slate-950/90 p-6 text-center">
           <LoaderCircle className="mb-4 h-10 w-10 animate-spin text-teal-400" />
-          <h4 className="text-base font-semibold text-white">
+          <h3 className="text-base font-semibold text-white">
             Auditing Destination Security
-          </h4>
+          </h3>
           <p className="mt-1 text-xs text-slate-400 max-w-xs">
             Evaluating protocol integrity, domain reputation, typosquatting heuristics, and known threat feeds...
           </p>
@@ -218,9 +218,9 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
         <div className="flex items-center justify-between text-xs text-slate-400">
           <span className="flex items-center gap-1.5 font-medium text-slate-300">
             <Sparkles className="h-3.5 w-3.5 text-teal-400" />
-            <span>Simulation Fixtures</span>
+            <span>Try a sample</span>
           </span>
-          <span className="text-[11px] text-slate-400">Desktop Evaluation</span>
+          <span className="text-[11px] text-slate-400">Example scans</span>
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">

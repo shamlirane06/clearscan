@@ -25,17 +25,17 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "scanner", label: "QR Scanner", icon: QrCode },
-    { id: "manual", label: "URL Inspector", icon: Link2 },
+    { id: "dashboard", label: "Overview", icon: LayoutDashboard },
+    { id: "scanner", label: "QR scan", icon: QrCode },
+    { id: "manual", label: "Check a URL", icon: Link2 },
     {
       id: "history",
-      label: "Audit Logs",
+      label: "History",
       icon: History,
       badge: historyCount > 0 ? historyCount : undefined,
     },
-    { id: "learn", label: "Threat Academy", icon: GraduationCap },
-    { id: "about", label: "Architecture", icon: Info },
+    { id: "learn", label: "Learn", icon: GraduationCap },
+    { id: "about", label: "About", icon: Info },
   ];
 
   const handleNavClick = (pageId: string) => {
@@ -44,7 +44,7 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand identity */}
         <div className="flex items-center gap-6">
@@ -60,12 +60,9 @@ export default function Navbar({
                 <span className="text-base font-semibold tracking-tight text-white group-hover:text-slate-100 transition-colors">
                   ClearScan
                 </span>
-                <span className="rounded border border-slate-700/60 bg-slate-800/80 px-1.5 py-0.5 text-[10px] font-medium text-slate-300">
-                  v2.4
-                </span>
               </div>
               <span className="text-xs text-slate-400 hidden sm:block">
-                Zero-Trust Verification
+                QR &amp; link safety
               </span>
             </div>
           </button>
@@ -73,19 +70,21 @@ export default function Navbar({
           {/* Real-time system status */}
           <div className="hidden xl:flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1 text-xs text-slate-400">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            <span className="font-medium text-slate-300">Engine Active</span>
+            <span className="font-medium text-slate-300">Local checks ready</span>
           </div>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1 rounded-xl border border-slate-800/80 bg-slate-900/60 p-1">
+          <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 rounded-xl border border-slate-800/80 bg-slate-900/60 p-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activePage === item.id;
             return (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => handleNavClick(item.id)}
+                aria-current={isActive ? "page" : undefined}
                 className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                   isActive
                     ? "bg-slate-800 text-white shadow-sm border border-slate-700/60"
@@ -119,7 +118,8 @@ export default function Navbar({
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+            aria-controls="mobile-navigation"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
           aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={mobileMenuOpen}
         >
@@ -129,16 +129,18 @@ export default function Navbar({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="border-t border-slate-800 bg-slate-950 px-4 py-3 lg:hidden">
-          <nav className="flex flex-col gap-1">
+        <div id="mobile-navigation" className="border-t border-slate-800 bg-slate-950 px-4 py-3 lg:hidden">
+          <nav aria-label="Primary" className="flex flex-col gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
               return (
                 <button
                   key={item.id}
+                    type="button"
                   onClick={() => handleNavClick(item.id)}
-                  className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    aria-current={isActive ? "page" : undefined}
+                  className={`flex min-h-11 items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-slate-800 text-white border border-slate-700/60"
                       : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
@@ -159,8 +161,9 @@ export default function Navbar({
 
             <div className="mt-2 pt-2 border-t border-slate-800/80">
               <button
+                type="button"
                 onClick={() => handleNavClick("scanner")}
-                className="w-full flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 transition-colors"
+                className="ink-action w-full flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
               >
                 <QrCode className="h-4 w-4" />
                 <span>Launch Camera Scanner</span>
