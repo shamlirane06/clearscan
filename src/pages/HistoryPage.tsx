@@ -17,12 +17,14 @@ interface HistoryPageProps {
   history: ScanHistoryItem[];
   onClearHistory: () => void;
   onRemoveItem: (id: string) => void;
+  reportView?: boolean;
 }
 
 export default function HistoryPage({
   history,
   onClearHistory,
   onRemoveItem,
+  reportView = false,
 }: HistoryPageProps) {
   const [search, setSearch] = useState("");
   const [filterLevel, setFilterLevel] = useState<string>("ALL");
@@ -70,11 +72,13 @@ export default function HistoryPage({
           <div className="flex items-center gap-2.5">
             <Terminal className="h-5 w-5 text-teal-400" />
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Scan history
+              {reportView ? "Reports" : "Scan history"}
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-400">
-            Your scan history is stored in this browser.
+            {reportView
+              ? "Security reports from scans stored in this browser."
+              : "Your scan history is stored in this browser."}
           </p>
         </div>
 

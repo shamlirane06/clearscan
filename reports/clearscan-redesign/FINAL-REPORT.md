@@ -6,12 +6,23 @@ Applied the selected editorial, product-focused reference across the existing Cl
 
 ## Discovery and boundaries
 
-Reviewed the React 19, TypeScript, Vite, and Tailwind CSS v4 frontend, the Spring Boot scan API and client fallback, local-storage scan history, QR camera scanner, educational topics and quiz, and all six active views. The frontend has no authentication or database-backed account flow. The redesign keeps the actual app views and operations: Overview, QR scan, Check a URL, History, Learn, and About. It does not add the reference image's sign-in, account settings, subscription, or fictional analytics features.
+Reviewed the React 19, TypeScript, Vite, and Tailwind CSS v4 frontend, the Spring Boot scan API and client fallback, local-storage scan history, QR camera scanner, educational topics and quiz, and all six original views. The frontend has no authentication or database-backed account flow. The app retains Overview, QR scan, Check a URL, History, Learn, and About, and adds a Reports view that reuses saved scan records. It does not add the reference image's sign-in, account settings, subscription, or fictional analytics features.
+
+## Reference comparison and page mapping
+
+| Reference requirement | Existing app before this pass | Implementation |
+| --- | --- | --- |
+| Compact left rail with Dashboard, Scan History, Reports, Settings, Help | Desktop used a centered six-link top navigation. The app had overview, scan, history, Learn, and About views; it had no Settings capability. | Added the five-row desktop sidebar in the reference order. Dashboard and Scan History use existing views. Reports reuses real scan reports stored with browser history. Help opens the existing Learn view. Settings is shown disabled because no settings capability exists to connect. |
+| Landing and dashboard surfaces | Overview is the real scan workspace; there is no marketing-only landing route or account dashboard. | Kept URL and QR scan actions visible on Overview and preserved actual routes. Account controls, marketing claims, and fictional dashboard values were not added. |
+| Login and profile/settings pages | No authentication, account, or settings implementation exists in this frontend. | Not recreated as working routes; adding them would invent application functionality. |
+| Reference palette and editorial typography | The prior pass had applied ivory, charcoal, terracotta, serif display text, and Geist body text. | Retained the approved tokens and applied the reference sidebar order, icon placement, active state, and compact labels. |
+| Existing secondary routes | QR scan, URL check, History, Learn, and About were available through the original desktop navigation. | QR and URL check remain available from Overview and the mobile navigation; History and Help are in the sidebar; About remains in the footer and mobile navigation. |
 
 ## Changes
 
 - **Shared visual system:** Replaced the previous evergreen direction with warm ivory and charcoal tokens, terracotta emphasis, refined serif headings, Geist body text, consistent borders, controls, cards, focus states, and dark-mode adaptations.
 - **Overview:** Put the real QR and URL scan actions first, added the reference-inspired headline and inline shield illustration, and retained actual scan summary counts. The activity chart is computed from scan timestamps stored in this browser and shows a real empty state when the last seven days have no scans.
+- **Dashboard navigation:** Replaced the desktop link group with the five-entry reference sidebar. Reports reuses reports already stored in scan history. Settings is visibly disabled and announced as unavailable because no settings feature exists in the current project.
 - **Scan and results:** Updated the URL form, QR scanner, scan status, and security report to use the new surface and color system while preserving scan requests and result handling.
 - **History, Learn, and About:** Applied the shared typography and layout to local history, learning content and quiz, and the existing product information and contact link.
 - **Safety and accessibility:** Kept the URL validation correction that rejects invalid hostnames and clears stale results on input change. Preserved page navigation, semantic headings, keyboard focus styles, feedback announcements, mobile hit areas, and reduced-motion handling.
@@ -23,16 +34,18 @@ Updated dashboard screenshots are in [`direction-c/`](direction-c/):
 - [Mobile, 390 × 844](direction-c/overview-390.png)
 - [Tablet, 768 × 900](direction-c/overview-768.png)
 - [Desktop, 1440 × 900](direction-c/overview-1440.png)
-- [Earlier desktop dark-mode capture](direction-c/overview-desktop-dark.png)
+- [Desktop dark mode, 1440 × 900](direction-c/overview-1440-dark.png)
 
-Responsive measurements are in [`layout-mobile.json`](direction-c/layout-mobile.json), [`layout-tablet.json`](direction-c/layout-tablet.json), and [`layout-desktop.json`](direction-c/layout-desktop.json). Each reports zero horizontal overflow. The existing History, Learn, About, QR scan, and URL scan views were also opened during the browser review. Camera permission was not granted, so physical camera capture was not verified.
+The desktop capture includes the new five-item sidebar; the mobile capture shows the responsive overview with the sidebar collapsed to the menu control. Browser review also opened Reports, Scan History, Help, QR scanning, URL inspection, and About. Settings remains disabled because there is no settings behavior in the existing application. Camera permission was not granted, so physical camera capture was not verified.
+
+Responsive measurements are in [`layout-mobile.json`](direction-c/layout-mobile.json), [`layout-tablet.json`](direction-c/layout-tablet.json), and [`layout-desktop.json`](direction-c/layout-desktop.json). All report zero horizontal overflow after the sidebar change. The refreshed screenshots show no visible clipping at 390, 768, and 1440 pixels.
 
 ## Verification and limits
 
 - `npm run build`: passed (TypeScript and Vite production build).
 - `npm test`: passed (3 files, 17 tests).
 - `npm run lint`: completed with three warnings: one in the Web Uplift runner and two existing fast-refresh warnings in shared button and badge modules.
-- The production build reports a 690 kB JavaScript chunk (204 kB gzip), above Vite's 500 kB warning threshold.
+- The production build reports a 692 kB JavaScript chunk (205 kB gzip), above Vite's 500 kB warning threshold.
 - Backend API and Google Safe Browsing integration were not verified during this frontend redesign; Maven was not available in the earlier environment. The current UI continues to use the existing scan service and fallback behavior.
 - The earlier dependency install reported six audit findings (two low, four moderate); dependency updates were outside this redesign.
 

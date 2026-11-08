@@ -19,23 +19,28 @@
     "x": 0,
     "y": 0,
     "width": 768,
-    "height": 2864
+    "height": 3038
   },
   "observed": {
-    "cls": 0,
-    "shifts": [],
+    "cls": 0.00016124018916377313,
+    "shifts": [
+      {
+        "value": 0.00016124018916377313,
+        "startTime": 694.5
+      }
+    ],
     "longTasks": [
       {
-        "duration": 132,
-        "startTime": 6210
+        "duration": 81,
+        "startTime": 395.6000000089407
       },
       {
-        "duration": 89,
-        "startTime": 6351.29999999702
+        "duration": 73,
+        "startTime": 482.40000000596046
       },
       {
-        "duration": 185,
-        "startTime": 6440.79999999702
+        "duration": 100,
+        "startTime": 556.1000000089407
       }
     ],
     "scrollWidth": 768,

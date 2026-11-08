@@ -55,7 +55,7 @@ export default function Dashboard({
               <span>A safer pause before you open</span>
             </div>
 
-            <h1 className="text-4xl font-semibold leading-[.98] tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-semibold leading-[1] tracking-tight text-white sm:text-5xl lg:text-5xl">
               <span className="block">Scan. Analyze.</span>
               <span className="mt-1 block text-teal-500">Stay Secure.</span>
             </h1>

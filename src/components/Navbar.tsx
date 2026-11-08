@@ -9,6 +9,7 @@ import {
   History,
   GraduationCap,
   Info,
+  FileText,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -25,7 +26,7 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Overview", icon: LayoutDashboard },
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "scanner", label: "QR scan", icon: QrCode },
     { id: "manual", label: "Check a URL", icon: Link2 },
     {
@@ -34,7 +35,8 @@ export default function Navbar({
       icon: History,
       badge: historyCount > 0 ? historyCount : undefined,
     },
-    { id: "learn", label: "Learn", icon: GraduationCap },
+    { id: "reports", label: "Reports", icon: FileText },
+    { id: "learn", label: "Help", icon: GraduationCap },
     { id: "about", label: "About", icon: Info },
   ];
 
@@ -74,35 +76,6 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Desktop Navigation */}
-          <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 rounded-xl border border-slate-800/80 bg-slate-900/60 p-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activePage === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleNavClick(item.id)}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  isActive
-                    ? "bg-slate-800 text-white shadow-sm border border-slate-700/60"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-                }`}
-              >
-                <Icon className={`h-3.5 w-3.5 ${isActive ? "text-teal-400" : "text-slate-500"}`} />
-                <span>{item.label}</span>
-                {item.badge !== undefined && (
-                  <span className="ml-0.5 rounded-full bg-teal-500/15 border border-teal-500/30 px-1.5 py-0.2 text-[10px] font-semibold text-teal-300">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
         {/* Primary Action Button */}
         <div className="hidden sm:flex items-center gap-3">
           <button
@@ -118,7 +91,7 @@ export default function Navbar({
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-controls="mobile-navigation"
+          aria-controls="mobile-navigation"
           className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
           aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={mobileMenuOpen}
@@ -137,9 +110,9 @@ export default function Navbar({
               return (
                 <button
                   key={item.id}
-                    type="button"
+                  type="button"
                   onClick={() => handleNavClick(item.id)}
-                    aria-current={isActive ? "page" : undefined}
+                  aria-current={isActive ? "page" : undefined}
                   className={`flex min-h-11 items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-slate-800 text-white border border-slate-700/60"

@@ -1,6 +1,10 @@
 import { ShieldCheck, ExternalLink, Terminal, Lock } from "lucide-react";
 
-export default function Footer() {
+interface FooterProps {
+  onNavigate?: (page: string) => void;
+}
+
+export default function Footer({ onNavigate }: FooterProps) {
   return (
     <footer className="border-t border-slate-800/80 bg-slate-950 px-4 py-8 text-slate-400 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_1fr]">
@@ -26,6 +30,15 @@ export default function Footer() {
               <span>Spring Boot + React Engine</span>
             </span>
           </div>
+          {onNavigate && (
+            <button
+              type="button"
+              onClick={() => onNavigate("about")}
+              className="pt-1 text-xs font-medium text-slate-400 underline decoration-slate-600 underline-offset-4 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+            >
+              About ClearScan
+            </button>
+          )}
         </div>
 
         <div className="space-y-3 text-xs leading-relaxed text-slate-400">
