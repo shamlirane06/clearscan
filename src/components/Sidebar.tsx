@@ -2,7 +2,6 @@ import {
   CircleHelp,
   FileText,
   LayoutDashboard,
-  Settings,
   History,
 } from "lucide-react";
 
@@ -16,7 +15,6 @@ const items = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "history", label: "Scan History", icon: History },
   { id: "reports", label: "Reports", icon: FileText },
-  { id: "settings", label: "Settings", icon: Settings, disabled: true },
   { id: "learn", label: "Help", icon: CircleHelp },
 ];
 
@@ -36,21 +34,9 @@ export default function Sidebar({ activePage, onNavigate, historyCount }: Sideba
                   {historyCount}
                 </span>
               )}
-              {item.disabled && <span className="sr-only">Unavailable in this version</span>}
             </>
           );
-
-          return item.disabled ? (
-            <button
-              key={item.id}
-              type="button"
-              disabled
-              title="Settings are not part of the current application."
-              className="flex min-h-7 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 text-left text-[11px] font-medium text-slate-500 opacity-80"
-            >
-              {content}
-            </button>
-          ) : (
+          return (
             <button
               key={item.id}
               type="button"
