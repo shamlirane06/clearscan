@@ -30,14 +30,13 @@ public class UrlAnalysisService {
             RiskScoringService riskScoringService,
             SsrfProtection ssrfProtection) {
 
-        // Order matters: structural checks first, then intelligence
+        // Keep deterministic local checks separate from external threat intelligence.
         this.analyzers = List.of(
                 urlValidationAnalyzer,
                 suspiciousDomainAnalyzer,
                 lookalikeDomainAnalyzer,
                 urlShortenerAnalyzer,
-                urlStructureAnalyzer,
-                threatIntelligenceAnalyzer
+                urlStructureAnalyzer
         );
         this.riskScoringService = riskScoringService;
         this.ssrfProtection = ssrfProtection;
@@ -50,6 +49,7 @@ public class UrlAnalysisService {
         if (rawUrl == null || rawUrl.trim().isEmpty()) {
             return buildErrorResponse("", "URL cannot be empty.", timestamp);
         }
+        if (rawUrl.length() > 2048) return buildErrorResponse(rawUrl, "URL exceeds the 2048 character limit.", timestamp);
 
         // Normalize URL
         String normalizedUrl = rawUrl.trim();
@@ -63,6 +63,9 @@ public class UrlAnalysisService {
             parsedUri = URI.create(normalizedUrl);
             if (parsedUri.getHost() == null) {
                 throw new IllegalArgumentException("No host in URL");
+            }
+            if (parsedUri.getUserInfo() != null || parsedUri.getPort() < -1 || parsedUri.getPort() > 65535 || parsedUri.getPort() == 0) {
+                throw new IllegalArgumentException("Invalid URL authority");
             }
         } catch (Exception e) {
             return buildErrorResponse(rawUrl, "The provided URL could not be parsed. Please check the format.", timestamp);
@@ -86,19 +89,23 @@ public class UrlAnalysisService {
             try {
                 allChecks.addAll(analyzer.analyze(normalizedUrl, parsedUri));
             } catch (Exception e) {
-                allChecks.add(new SecurityCheckResult(
-                        analyzer.getClass().getSimpleName().replace("Analyzer", ""),
-                        true, 0, "WARNING",
-                        "This security check encountered an error and could not complete.",
-                        "Error during analysis"
-                ));
+                return buildErrorResponse(rawUrl,
+                        "A required local security check could not complete. Treat this URL as unverified.", timestamp);
             }
         }
+
+        ThreatIntelligenceAnalyzer.Outcome threatOutcome = threatIntelligenceAnalyzer.analyzeWithStatus(normalizedUrl);
+        allChecks.addAll(threatOutcome.checks());
 
         // Calculate risk score
         int riskScore = riskScoringService.calculateRiskScore(allChecks);
         RiskClassification classification = riskScoringService.classify(riskScore);
-        String legacyStatus = riskScoringService.toLegacyStatus(classification);
+        // Legacy SAFE must never imply Safe Browsing succeeded. Keep the richer heuristic
+        // classification separate and use the legacy unverifiable state until TI was checked.
+        boolean threatIntelChecked = threatOutcome.status() == ThreatIntelligenceAnalyzer.Status.CHECKED_NO_MATCH
+                || threatOutcome.status() == ThreatIntelligenceAnalyzer.Status.MATCH_FOUND;
+        String legacyStatus = classification == RiskClassification.LOW_RISK && !threatIntelChecked
+                ? "UNABLE_TO_VERIFY" : riskScoringService.toLegacyStatus(classification);
 
         // Collect warnings
         List<String> warnings = allChecks.stream()
@@ -121,7 +128,9 @@ public class UrlAnalysisService {
                 .warnings(warnings)
                 .recommendedAction(riskScoringService.getRecommendedAction(classification))
                 .timestamp(timestamp)
-                .threatIntelligenceAvailable(threatIntelligenceAnalyzer.isAvailable());
+                .threatIntelligenceAvailable(threatIntelChecked)
+                .analysisSource("BACKEND")
+                .threatIntelligenceStatus(threatOutcome.status().name());
     }
 
     private ScanResponse buildErrorResponse(String rawUrl, String errorMessage, String timestamp) {
@@ -137,6 +146,8 @@ public class UrlAnalysisService {
                 .warnings(List.of(errorMessage))
                 .recommendedAction("The URL could not be analyzed. Do not open it unless you can verify its source through a trusted channel.")
                 .timestamp(timestamp)
-                .threatIntelligenceAvailable(false);
+                .threatIntelligenceAvailable(false)
+                .analysisSource("BACKEND")
+                .threatIntelligenceStatus("NOT_CHECKED");
     }
 }

@@ -28,15 +28,10 @@ public class LookalikeDomainAnalyzer implements SecurityAnalyzer {
     );
 
     // Common character substitutions used in lookalike domains
-    private static final Map<Character, List<Character>> CHAR_SUBSTITUTIONS = Map.of(
-            'o', List.of('0'),
-            'l', List.of('1', 'i'),
-            'i', List.of('1', 'l'),
-            'e', List.of('3'),
-            'a', List.of('4', '@'),
-            's', List.of('5', '$'),
-            'g', List.of('9', 'q'),
-            't', List.of('7')
+    // Normalize only unambiguous lookalike glyphs. Mapping ordinary letters such as i/l
+    // to each other also corrupted legitimate targets (for example g00gle -> googie).
+    private static final Map<Character, Character> CHAR_SUBSTITUTIONS = Map.of(
+            '0', 'o', '1', 'l', '3', 'e', '4', 'a', '5', 's', '7', 't', '9', 'g', '@', 'a', '$', 's'
     );
 
     @Override
@@ -95,16 +90,7 @@ public class LookalikeDomainAnalyzer implements SecurityAnalyzer {
 
     private String normalizeSubstitutions(String domain) {
         StringBuilder normalized = new StringBuilder();
-        for (char c : domain.toCharArray()) {
-            char replacement = c;
-            for (Map.Entry<Character, List<Character>> sub : CHAR_SUBSTITUTIONS.entrySet()) {
-                if (sub.getValue().contains(c)) {
-                    replacement = sub.getKey();
-                    break;
-                }
-            }
-            normalized.append(replacement);
-        }
+        for (char c : domain.toCharArray()) normalized.append(CHAR_SUBSTITUTIONS.getOrDefault(c, c));
         return normalized.toString();
     }
 }

@@ -21,6 +21,8 @@ public class ScanResponse {
     private String recommendedAction;
     private String timestamp;
     private boolean threatIntelligenceAvailable;
+    private String analysisSource = "BACKEND";
+    private String threatIntelligenceStatus = "NOT_CONFIGURED";
 
     public ScanResponse() {}
 
@@ -37,6 +39,8 @@ public class ScanResponse {
     public ScanResponse recommendedAction(String a) { this.recommendedAction = a; return this; }
     public ScanResponse timestamp(String t) { this.timestamp = t; return this; }
     public ScanResponse threatIntelligenceAvailable(boolean t) { this.threatIntelligenceAvailable = t; return this; }
+    public ScanResponse analysisSource(String source) { this.analysisSource = source; return this; }
+    public ScanResponse threatIntelligenceStatus(String status) { this.threatIntelligenceStatus = status; return this; }
 
     // All getters
     public String getUrl() { return url; }
@@ -51,4 +55,6 @@ public class ScanResponse {
     public String getRecommendedAction() { return recommendedAction; }
     public String getTimestamp() { return timestamp; }
     public boolean isThreatIntelligenceAvailable() { return threatIntelligenceAvailable; }
+    public String getAnalysisSource() { return analysisSource; }
+    public String getThreatIntelligenceStatus() { return threatIntelligenceStatus; }
 }

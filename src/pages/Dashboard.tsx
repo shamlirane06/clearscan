@@ -45,10 +45,10 @@ export default function Dashboard({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 w-full space-y-8">
       {/* Editorial introduction, using only the product's real scan actions. */}
       <section className="editorial-hero relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-9 lg:p-11">
-        <div className="relative z-10 grid items-center gap-7 sm:gap-9 lg:grid-cols-[1.05fr_.95fr]">
+        <div className="relative z-10 grid min-w-0 items-center gap-7 sm:gap-9 lg:grid-cols-[1.05fr_.95fr]">
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
@@ -129,9 +129,9 @@ export default function Dashboard({
       </section>
 
       {/* Main Focus: Dual Inspection Workstation */}
-      <div className="grid gap-6 lg:grid-cols-12 items-start">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-12 items-start">
         {/* Left Column: Command Bar Inspector & Results (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="min-w-0 lg:col-span-7 space-y-6">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
               <div className="flex items-center gap-2.5">
@@ -220,7 +220,7 @@ export default function Dashboard({
         </div>
 
         {/* Right Column: Optical QR Scanner (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="min-w-0 lg:col-span-5 space-y-6">
           <Scanner onScanComplete={onScanComplete} />
 
           {/* Zero-Trust Security Advisory */}

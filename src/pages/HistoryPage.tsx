@@ -78,7 +78,7 @@ export default function HistoryPage({
           <p className="mt-1 text-sm text-slate-400">
             {reportView
               ? "Security reports from scans stored in this browser."
-              : "Your scan history is stored in this browser."}
+              : "Only destination origins and redacted check summaries are saved in this browser. Clear history below to remove them."}
           </p>
         </div>
 

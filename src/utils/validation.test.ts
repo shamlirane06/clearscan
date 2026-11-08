@@ -56,6 +56,13 @@ describe("URL Validation & SSRF Sanitization Utilities", () => {
     expect(validateAndNormalizeUrl("http://169.254.169.254/latest/meta-data").isValid).toBe(false);
   });
 
+  it("should block reserved and ambiguous numeric hosts, credentials, and overlong URLs", () => {
+    for (const url of ["http://100.64.0.1", "http://2130706433", "http://0177.0.0.1", "http://[fd00::1]", "http://[fe80::1]", "http://user:pass@example.com"]) {
+      expect(validateAndNormalizeUrl(url).isValid, url).toBe(false);
+    }
+    expect(validateAndNormalizeUrl(`https://example.com/${"a".repeat(2050)}`).isValid).toBe(false);
+  });
+
   it("should sanitize user text against XSS injection", () => {
     const raw = '<script>alert("xss")</script>';
     const sanitized = sanitizeText(raw);

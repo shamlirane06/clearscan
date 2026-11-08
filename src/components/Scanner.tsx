@@ -10,6 +10,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import type { BackendScanResponse } from "../types/scan";
 import { scanUrl } from "../services/scanService";
 import SecurityReport from "./SecurityReport";
+import { parseUpiPayPayload, type UpiPaymentDetails } from "../utils/upi";
 
 interface ScannerProps {
   onScanComplete?: (response: BackendScanResponse) => void;
@@ -19,12 +20,20 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
   const [scanState, setScanState] = useState<"idle" | "scanning" | "analyzing" | "result">("scanning");
   const [cameraError, setCameraError] = useState("");
   const [scanResult, setScanResult] = useState<BackendScanResponse | null>(null);
+  const [upiDetails, setUpiDetails] = useState<UpiPaymentDetails | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const startingRef = useRef(false);
   const processedRef = useRef(false);
 
   const handleProcessUrl = useCallback(
     async (url: string) => {
+      const payment = parseUpiPayPayload(url);
+      if (payment) {
+        setUpiDetails(payment);
+        setScanResult(null);
+        setScanState("result");
+        return;
+      }
       setScanState("analyzing");
       try {
         const response = await scanUrl(url);
@@ -105,6 +114,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
 
   function handleReset() {
     setScanResult(null);
+    setUpiDetails(null);
     setCameraError("");
     processedRef.current = false;
     setScanState("scanning");
@@ -126,8 +136,25 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
     return <SecurityReport report={scanResult} onReset={handleReset} />;
   }
 
+  if (scanState === "result" && upiDetails) {
+    return (
+      <section className="upi-review rounded-2xl border p-6 sm:p-8" aria-labelledby="upi-review-title">
+        <p className="eyebrow">QR payment request</p>
+        <h2 id="upi-review-title" className="mt-2 text-2xl font-semibold">Review the details before you continue</h2>
+        <p className="mt-2 text-sm">This QR contains a UPI payment address. ClearScan has only read the visible payload; it has not checked the recipient’s identity.</p>
+        <dl className="mt-6 grid gap-3 sm:grid-cols-2">
+          {[['Payee VPA', upiDetails.payeeVpa], ['Payee name', upiDetails.payeeName], ['Amount', upiDetails.amount ? `${upiDetails.currency ?? ''} ${upiDetails.amount}`.trim() : undefined], ['Currency', upiDetails.currency]].filter((item) => item[1]).map(([label, value]) => (
+            <div key={label} className="rounded-xl border p-4"><dt className="text-xs opacity-70">{label}</dt><dd className="mt-1 break-words text-sm font-medium">{value}</dd></div>
+          ))}
+        </dl>
+        <p role="note" className="mt-5 rounded-xl border p-4 text-sm font-medium">The recipient name and VPA are supplied by the QR and are not independently verified. Confirm them with the person or business through a trusted channel. ClearScan will not initiate or open a payment.</p>
+        <button onClick={handleReset} className="ink-action mt-5 rounded-full px-5 py-3 text-sm font-semibold">Scan another QR</button>
+      </section>
+    );
+  }
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg backdrop-blur-sm">
+    <div className="min-w-0 w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-lg backdrop-blur-sm sm:p-6">
       {/* Viewfinder Header */}
       <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-4">
         <div>
@@ -138,7 +165,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
             </h2>
           </div>
           <p className="mt-0.5 text-xs text-slate-400">
-            Real-time payload extraction &amp; destination verification
+            Reads QR contents and reviews web destinations
           </p>
         </div>
 
@@ -229,7 +256,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
             className="flex flex-col items-start rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-left transition-colors hover:border-emerald-500/40 hover:bg-slate-900"
           >
             <span className="text-xs font-semibold text-emerald-400">
-              Clean Destination
+              Ordinary HTTPS link
             </span>
             <span className="font-mono text-[11px] text-slate-400 truncate w-full mt-0.5">
               wikipedia.org
@@ -244,7 +271,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
               Typosquatted Brand
             </span>
             <span className="font-mono text-[11px] text-slate-400 truncate w-full mt-0.5">
-              amaz0n.xyz (Score: 75+)
+              amaz0n.xyz /verify
             </span>
           </button>
 
@@ -253,10 +280,10 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
             className="flex flex-col items-start rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-left transition-colors hover:border-rose-500/40 hover:bg-slate-900"
           >
             <span className="text-xs font-semibold text-rose-400">
-              Known Malware URL
+              Threat-intel test target
             </span>
             <span className="font-mono text-[11px] text-slate-400 truncate w-full mt-0.5">
-              SafeBrowsing demo
+              Google test URL · API required
             </span>
           </button>
         </div>

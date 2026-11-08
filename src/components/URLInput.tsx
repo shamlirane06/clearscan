@@ -11,33 +11,33 @@ interface URLInputProps {
 
 const DEMO_PRESETS = [
   {
-    label: "Safe HTTPS",
+    label: "Ordinary HTTPS",
     url: "https://www.wikipedia.org",
-    badge: "0 · Clean",
-    badgeClass: "border-emerald-500/30 text-emerald-300 bg-emerald-500/10",
+    badge: "HTTPS",
+    badgeClass: "border-slate-700 text-slate-300 bg-slate-800",
   },
   {
     label: "Lookalike Domain",
     url: "https://g00gle.com/security/login",
-    badge: "55 · Typosquat",
+    badge: "Lookalike",
     badgeClass: "border-amber-500/30 text-amber-300 bg-amber-500/10",
   },
   {
     label: "Shortened Redirect",
     url: "https://bit.ly/sbi-urgent-update",
-    badge: "25 · Masked",
+    badge: "Shortened URL",
     badgeClass: "border-yellow-500/30 text-yellow-300 bg-yellow-500/10",
   },
   {
     label: "Fake Bank KYC",
     url: "http://sbi-kyc-update.xyz/verify",
-    badge: "75 · Phishing",
+    badge: "Suspicious signals",
     badgeClass: "border-rose-500/30 text-rose-300 bg-rose-500/10",
   },
   {
-    label: "Synthetic Threat",
+    label: "Safe Browsing test URL",
     url: "https://testsafebrowsing.appspot.com/malware",
-    badge: "95 · Malicious",
+    badge: "Requires live API",
     badgeClass: "border-rose-500/40 text-rose-300 bg-rose-500/20",
   },
   {
@@ -75,10 +75,10 @@ export default function URLInput({ onScan, loading, initialUrl = "", onInputChan
       <div>
         <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:justify-between">
           <label htmlFor="url-field" className="text-xs font-medium text-slate-300">
-            Paste a link or QR payload
+            Paste an HTTP or HTTPS link
           </label>
           <span className="text-xs text-slate-400">
-            Web links and UPI addresses
+            UPI details are shown when read from a QR code
           </span>
         </div>
 

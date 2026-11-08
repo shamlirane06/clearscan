@@ -42,7 +42,7 @@ export default function AboutPage() {
               <h3 className="font-semibold text-sm text-slate-200">URL &amp; SSRF Network Guard</h3>
             </div>
             <p className="text-slate-400 leading-relaxed">
-              Enforces HTTP/HTTPS protocol integrity, detects raw IPv4/IPv6, blocks internal subnets (<code className="font-mono text-teal-300">127.0.0.1</code>, RFC 1918), and detects obfuscated percent-encoding.
+              Accepts only HTTP/HTTPS, rejects malformed authorities and local or special-use IP literals (IPv4 and IPv6), and flags selected suspicious encodings. Destination hostnames are not resolved or fetched.
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export default function AboutPage() {
               <h3 className="font-semibold text-sm text-slate-200">Threat Feeds &amp; Safe Browsing</h3>
             </div>
             <p className="text-slate-400 leading-relaxed">
-              Spring Boot backend integration with Google Safe Browsing API v4, with automatic fail-safe fallback to deterministic heuristic evaluation.
+              Optional Google Safe Browsing API v4 lookup. When it is not configured or is unavailable, ClearScan labels that state and reports local checks separately.
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function AboutPage() {
           <li className="flex items-start gap-2">
             <span className="text-amber-400 font-bold">&bull;</span>
             <span>
-              <strong>Privacy-by-Design:</strong> Scanned destinations and session logs are retained in your browser's local client storage. No personal browsing history is tracked or sold.
+              <strong>Local history:</strong> Scan summaries are stored in this browser. URL paths, query strings, fragments, and embedded credentials are removed before saving. The URL you submit is sent to this app's backend and, when configured, the full URL is sent to Google Safe Browsing.
             </span>
           </li>
         </ul>

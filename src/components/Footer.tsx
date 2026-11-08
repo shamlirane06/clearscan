@@ -23,7 +23,7 @@ export default function Footer({ onNavigate }: FooterProps) {
           <div className="flex items-center gap-4 pt-1 text-xs text-slate-400">
             <span className="flex items-center gap-1.5">
               <Lock className="h-3.5 w-3.5 text-teal-400" />
-              <span>Local Client Privacy</span>
+              <span>History stays in this browser</span>
             </span>
             <span className="flex items-center gap-1.5">
               <Terminal className="h-3.5 w-3.5 text-slate-400" />
@@ -45,7 +45,7 @@ export default function Footer({ onNavigate }: FooterProps) {
           <p>
             <strong className="text-slate-300">Security Notice: </strong>
             Never disclose OTPs, PINs, or UPI passwords to receive money.
-            ClearScan heuristics provide proactive guidance against known attack patterns.
+            Scan history stores only the destination origin locally. The full URL is sent to the ClearScan backend; when configured, Google Safe Browsing also receives it for a threat lookup. ClearScan never opens URLs or starts payments.
           </p>
           <p className="flex items-center gap-1.5 pt-1">
             <span>In an emergency, report cyber fraud immediately to</span>

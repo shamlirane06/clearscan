@@ -14,12 +14,8 @@ public class ThreatIntelligenceAnalyzer implements SecurityAnalyzer {
     private final String apiKey;
     private final boolean enabled;
 
-    // Synthetic test URLs for demo mode — NEVER present as real threat intelligence
-    private static final Set<String> DEMO_MALICIOUS_DOMAINS = Set.of(
-            "testsafebrowsing.appspot.com",
-            "malware.testing.google.test",
-            "evil-phishing-test.example.com"
-    );
+    public enum Status { NOT_CONFIGURED, CHECKED_NO_MATCH, MATCH_FOUND, UNAVAILABLE }
+    public record Outcome(Status status, List<SecurityCheckResult> checks) {}
 
     public ThreatIntelligenceAnalyzer(
             RestClient restClient,
@@ -32,77 +28,61 @@ public class ThreatIntelligenceAnalyzer implements SecurityAnalyzer {
 
     @Override
     public List<SecurityCheckResult> analyze(String rawUrl, URI parsedUri) {
-        List<SecurityCheckResult> results = new ArrayList<>();
-        String host = parsedUri.getHost();
+        return analyzeWithStatus(rawUrl).checks();
+    }
 
-        // Demo mode check
-        if (host != null && DEMO_MALICIOUS_DOMAINS.stream().anyMatch(d -> host.toLowerCase().endsWith(d))) {
-            results.add(SecurityCheckResult.critical("Threat Intelligence (Demo)",
-                    "[DEMO] This URL matches a synthetic test indicator used for demonstration purposes. In production, this would be flagged by a real threat intelligence service.",
-                    "Demo malicious domain: " + host));
-            return results;
-        }
+    public Outcome analyzeWithStatus(String rawUrl) {
 
         // If threat intelligence is not enabled or API key is missing
         if (!enabled || apiKey == null || apiKey.isBlank()) {
-            results.add(new SecurityCheckResult(
+            return new Outcome(Status.NOT_CONFIGURED, List.of(new SecurityCheckResult(
                     "Threat Intelligence",
-                    true, // passed (not failed, just unavailable)
+                    false,
                     0,
                     "INFO",
-                    "Real-time threat intelligence is not configured. The URL was checked using local heuristic analysis only. A URL not appearing in a threat database does not guarantee safety.",
+                    "Google Safe Browsing was not checked because it is not configured. Local URL heuristics still ran; this is not a safe-list check.",
                     "Service: Not configured"
-            ));
-            return results;
+            )));
         }
 
         // Call Google Safe Browsing API
         try {
-            String requestBody = """
-                {
-                    "client": {
-                        "clientId": "clearscan",
-                        "clientVersion": "1.0.0"
-                    },
-                    "threatInfo": {
-                        "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
-                        "platformTypes": ["ANY_PLATFORM"],
-                        "threatEntryTypes": ["URL"],
-                        "threatEntries": [{"url": "%s"}]
-                    }
-                }
-                """.formatted(rawUrl.replace("\"", "\\\""));
+            Map<String, Object> body = Map.of(
+                    "client", Map.of("clientId", "clearscan", "clientVersion", "1.0.0"),
+                    "threatInfo", Map.of(
+                            "threatTypes", List.of("MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"),
+                            "platformTypes", List.of("ANY_PLATFORM"),
+                            "threatEntryTypes", List.of("URL"),
+                            "threatEntries", List.of(Map.of("url", rawUrl))));
 
-            String response = restClient.post()
-                    .uri("https://safebrowsing.googleapis.com/v4/threatMatches:find?key=" + apiKey)
-                    .header("Content-Type", "application/json")
-                    .body(requestBody)
+            Map<?, ?> response = restClient.post()
+                    .uri(uriBuilder -> uriBuilder.scheme("https").host("safebrowsing.googleapis.com")
+                            .path("/v4/threatMatches:find").queryParam("key", apiKey).build())
+                    .body(body)
                     .retrieve()
-                    .body(String.class);
+                    .body(Map.class);
 
-            if (response != null && response.contains("\"matches\"")) {
-                results.add(SecurityCheckResult.critical("Threat Intelligence",
-                        "This URL has been identified as malicious by Google Safe Browsing. The threat database confirms this is a known dangerous URL.",
-                        "Source: Google Safe Browsing API"));
-            } else {
-                results.add(SecurityCheckResult.safe("Threat Intelligence",
-                        "No known threats found in Google Safe Browsing database. Note: a URL not appearing in the database does not guarantee it is safe."));
+            if (response == null || (response.containsKey("matches") && !(response.get("matches") instanceof List<?>))) {
+                return unavailable("Google Safe Browsing returned an invalid response.");
             }
+            List<?> matches = response != null && response.get("matches") instanceof List<?> list ? list : List.of();
+            if (!matches.isEmpty()) {
+                boolean validMatches = matches.stream().allMatch(match -> match instanceof Map<?, ?> item
+                        && item.get("threatType") instanceof String && item.get("platformType") instanceof String
+                        && item.get("threatEntryType") instanceof String);
+                if (!validMatches) return unavailable("Google Safe Browsing returned an invalid response.");
+                return new Outcome(Status.MATCH_FOUND, List.of(SecurityCheckResult.critical(
+                        "Threat Intelligence", "Google Safe Browsing reported a known threat for this URL.", "Source: Google Safe Browsing API")));
+            }
+            return new Outcome(Status.CHECKED_NO_MATCH, List.of(SecurityCheckResult.safe("Threat Intelligence",
+                    "Google Safe Browsing reported no known match. Absence from its database does not guarantee safety.")));
         } catch (Exception e) {
-            results.add(new SecurityCheckResult(
-                    "Threat Intelligence",
-                    true, // Don't mark as failed-unsafe
-                    0,
-                    "WARNING",
-                    "Threat intelligence service was unavailable. The URL was checked using local heuristic analysis only. Treat results with additional caution.",
-                    "Error: Service timeout or unavailable"
-            ));
+            return unavailable("Google Safe Browsing could not complete the lookup. Local URL heuristics are shown separately.");
         }
-
-        return results;
     }
 
-    public boolean isAvailable() {
-        return enabled && apiKey != null && !apiKey.isBlank();
+    private Outcome unavailable(String explanation) {
+        return new Outcome(Status.UNAVAILABLE, List.of(new SecurityCheckResult("Threat Intelligence", false, 0, "INFO",
+                explanation, "Service: unavailable")));
     }
 }

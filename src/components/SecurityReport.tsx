@@ -149,31 +149,35 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
         <div className="flex flex-wrap items-center gap-2.5 text-xs">
           <span className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-300">
             <Cpu className="h-3.5 w-3.5 text-teal-400" />
-            <span>6-Layer Heuristic Pipeline</span>
+            <span>{report.analysisSource === "LOCAL_FALLBACK" ? "Local heuristic analysis" : "Backend heuristic analysis"}</span>
           </span>
 
           <span
             className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 ${
-              report.threatIntelligenceAvailable
+              report.threatIntelligenceStatus === "CHECKED_NO_MATCH"
                 ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                : report.threatIntelligenceStatus === "MATCH_FOUND"
+                ? "border-rose-500/30 bg-rose-500/10 text-rose-300"
                 : "border-slate-800 bg-slate-950/70 text-slate-400"
             }`}
           >
             <span
               className={`h-2 w-2 rounded-full ${
-                report.threatIntelligenceAvailable ? "bg-emerald-400" : "bg-amber-400"
+                report.threatIntelligenceStatus === "CHECKED_NO_MATCH" ? "bg-emerald-400" : report.threatIntelligenceStatus === "MATCH_FOUND" ? "bg-rose-400" : "bg-amber-400"
               }`}
             />
             <span>
-              {report.threatIntelligenceAvailable
-                ? "Google Safe Browsing: Connected"
-                : "Safe Browsing: Offline (Local Heuristics Active)"}
+              {report.threatIntelligenceStatus === "CHECKED_NO_MATCH" ? "Google Safe Browsing: checked, no match" :
+                report.threatIntelligenceStatus === "MATCH_FOUND" ? "Google Safe Browsing: threat match" :
+                report.threatIntelligenceStatus === "UNAVAILABLE" ? "Google Safe Browsing: unavailable" :
+                report.threatIntelligenceStatus === "NOT_CHECKED" ? "Google Safe Browsing: not checked" :
+                "Google Safe Browsing: not configured"}
             </span>
           </span>
 
           <span className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-400">
             <Lock className="h-3.5 w-3.5 text-slate-400" />
-            <span>SSRF Network Guard: Verified</span>
+            <span>Destination URL is analyzed as text; no redirects are followed</span>
           </span>
 
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-400 font-mono text-xs">
@@ -187,6 +191,8 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
             </span>
           </span>
         </div>
+
+        {report.analysisNotice && <p className="rounded-xl border border-amber-500/25 bg-amber-950/15 p-4 text-sm text-amber-200" role="status">{report.analysisNotice}</p>}
 
         {/* Actionable Mitigation Guidance */}
         <div

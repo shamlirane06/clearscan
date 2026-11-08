@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { BackendScanResponse, ScanHistoryItem, ScanSource, ScanStats } from "../types/scan";
+import { sanitizeHistoryItems, sanitizeScanForHistory } from "../utils/historyPrivacy";
 
 const STORAGE_KEY = "clearscan_history_v1";
 
@@ -8,7 +9,7 @@ export function useScanHistory() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        return sanitizeHistoryItems(JSON.parse(stored));
       }
     } catch (e) {
       console.error("Failed to load scan history:", e);
@@ -26,7 +27,7 @@ export function useScanHistory() {
 
   const addScan = (response: BackendScanResponse, source: ScanSource = "url") => {
     const newItem: ScanHistoryItem = {
-      ...response,
+      ...sanitizeScanForHistory(response),
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       source,
     };

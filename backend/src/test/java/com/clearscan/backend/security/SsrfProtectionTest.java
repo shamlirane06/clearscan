@@ -45,4 +45,28 @@ class SsrfProtectionTest {
     void ipv6Loopback() {
         assertNotNull(ssrfProtection.validate(URI.create("http://[::1]:8080")));
     }
+
+    @Test void blocksMetadataAndLinkLocal() {
+        assertNotNull(ssrfProtection.validate(URI.create("http://169.254.169.254/latest/meta-data/")));
+        assertNotNull(ssrfProtection.validate(URI.create("http://[fe80::1]/")));
+    }
+
+    @Test void blocksIpv6UniqueLocalAndMappedAddresses() {
+        assertNotNull(ssrfProtection.validate(URI.create("http://[fd00::1]/")));
+        assertNotNull(ssrfProtection.validate(URI.create("http://[::ffff:127.0.0.1]/")));
+    }
+
+    @Test void blocksCarrierGradeNatAndAmbiguousNumericIp() {
+        assertNotNull(ssrfProtection.validate(URI.create("http://100.64.0.1/")));
+        assertNotNull(ssrfProtection.validate(URI.create("http://2130706433/")));
+    }
+
+    @Test void rejectsIpv4OctalAndIpv6CompatiblePrivateTargets() {
+        assertNotNull(ssrfProtection.validate(URI.create("http://0177.0.0.1/")));
+        assertNotNull(ssrfProtection.validate(URI.create("http://[::127.0.0.1]/")));
+    }
+
+    @Test void allowsOrdinaryHostnamesWithoutPerformingDnsResolution() {
+        assertNull(ssrfProtection.validate(URI.create("https://not-resolved.invalid/")));
+    }
 }

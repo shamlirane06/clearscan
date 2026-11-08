@@ -12,12 +12,11 @@ export default function Hero() {
             Check before you tap, pay, or share
           </p>
           <h1 className="max-w-xl text-4xl font-semibold tracking-tight text-emerald-950 sm:text-5xl">
-            Check suspicious messages and links before you trust them.
+            Check a link or QR before you trust it.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-zinc-600 sm:text-lg">
-            ClearScan India helps you pause on KYC texts, fake parcels, job
-            offers, and UPI requests. Paste the message or link, review the
-            warning signs, then decide with more context.
+            Review a destination for suspicious URL patterns, see the scan source,
+            and make a more informed decision. UPI QR details are shown for review only.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -25,7 +24,7 @@ export default function Hero() {
               href="#scan"
               className="inline-flex h-11 items-center rounded-xl bg-emerald-800 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-900"
             >
-              Scan a message
+              Scan a QR code
             </a>
             <a
               href="#how-it-works"
@@ -39,9 +38,9 @@ export default function Hero() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
           <div className="rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-sm">
             <MessageSquareWarning className="mb-3 h-6 w-6 text-emerald-800" />
-            <h2 className="font-semibold text-emerald-950">Messages &amp; links</h2>
+            <h2 className="font-semibold text-emerald-950">Web links</h2>
             <p className="mt-2 text-sm leading-6 text-zinc-600">
-              Paste an SMS or WhatsApp text, or a URL you were asked to open.
+              Check an HTTP or HTTPS URL without opening it or following redirects.
             </p>
           </div>
           <div className="rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-sm">

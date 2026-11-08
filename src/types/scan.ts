@@ -32,6 +32,9 @@ export interface BackendScanResponse {
   recommendedAction: string;
   timestamp: string;
   threatIntelligenceAvailable: boolean;
+  analysisSource?: "BACKEND" | "LOCAL_FALLBACK";
+  threatIntelligenceStatus?: "NOT_CONFIGURED" | "CHECKED_NO_MATCH" | "MATCH_FOUND" | "UNAVAILABLE" | "NOT_CHECKED";
+  analysisNotice?: string;
 }
 
 export interface ScanHistoryItem extends BackendScanResponse {

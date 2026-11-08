@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,7 +17,7 @@ class UrlAnalysisServiceTest {
 
     @BeforeEach
     void setUp() {
-        RestClient restClient = RestClient.builder().build();
+        RestClient restClient = RestClient.builder().requestFactory(new SimpleClientHttpRequestFactory()).build();
         UrlValidationAnalyzer urlValidation = new UrlValidationAnalyzer();
         SuspiciousDomainAnalyzer suspiciousDomain = new SuspiciousDomainAnalyzer();
         LookalikeDomainAnalyzer lookalikeDomain = new LookalikeDomainAnalyzer();
@@ -37,9 +38,10 @@ class UrlAnalysisServiceTest {
     @DisplayName("1. Normal HTTPS URL should have low risk")
     void normalHttpsUrl() {
         ScanResponse result = service.analyze("https://www.wikipedia.org");
-        assertEquals("SAFE", result.getStatus());
+        assertEquals("UNABLE_TO_VERIFY", result.getStatus(), "Legacy status must not imply an unavailable threat-intelligence check was safe");
         assertTrue(result.getRiskScore() < 25, "Risk score should be low for a normal URL");
         assertEquals("LOW_RISK", result.getRiskClassification());
+        assertEquals("NOT_CONFIGURED", result.getThreatIntelligenceStatus());
     }
 
     @Test
@@ -58,10 +60,19 @@ class UrlAnalysisServiceTest {
     }
 
     @Test
+    @DisplayName("Public IPv6 literals receive an IP-address warning")
+    void publicIpv6AddressIsFlagged() {
+        ScanResponse result = service.analyze("https://[2606:4700:4700::1111]/");
+        assertEquals("LOW_RISK", result.getRiskClassification());
+        assertTrue(result.getSecurityChecks().stream().anyMatch(check -> check.getCheckName().equals("IP Address Detection")));
+    }
+
+    @Test
     @DisplayName("4. Suspicious lookalike domain should be flagged")
     void lookalikeDomain() {
         ScanResponse result = service.analyze("https://g00gle.com/login");
-        assertTrue(result.getRiskScore() >= 25, "Lookalike domain should have elevated risk");
+        assertEquals(41, result.getRiskScore(), "Score follows max 35 + 40% of the 15 point path check");
+        assertEquals("MODERATE_RISK", result.getRiskClassification());
         assertFalse(result.getWarnings().isEmpty(), "Should have warnings");
     }
 
@@ -73,6 +84,15 @@ class UrlAnalysisServiceTest {
     }
 
     @Test
+    @DisplayName("Demo preset scores use backend analyzer output and weighted scoring")
+    void demoPresetScores() {
+        assertEquals(0, service.analyze("https://www.wikipedia.org").getRiskScore());
+        assertEquals(41, service.analyze("https://g00gle.com/login").getRiskScore());
+        assertEquals(26, service.analyze("https://bit.ly/sbi-urgent-update").getRiskScore());
+        assertEquals(56, service.analyze("http://sbi-kyc-update.xyz/verify").getRiskScore());
+    }
+
+    @Test
     @DisplayName("6. Shortened URL should be flagged")
     void shortenedUrl() {
         ScanResponse result = service.analyze("https://bit.ly/abc123");
@@ -81,12 +101,13 @@ class UrlAnalysisServiceTest {
     }
 
     @Test
-    @DisplayName("7. Known malicious synthetic test URL should be CRITICAL")
-    void knownMaliciousTestUrl() {
+    @DisplayName("7. Google test URL is not labeled malicious without a real threat response")
+    void testUrlDoesNotInventThreatIntel() {
         ScanResponse result = service.analyze("https://testsafebrowsing.appspot.com/malware");
-        assertEquals("DANGEROUS", result.getStatus());
-        assertTrue(result.getRiskScore() >= 75, "Known malicious should be critical risk");
-        assertEquals("CRITICAL_RISK", result.getRiskClassification());
+        assertEquals("NOT_CONFIGURED", result.getThreatIntelligenceStatus());
+        assertEquals("LOW_RISK", result.getRiskClassification());
+        assertEquals("UNABLE_TO_VERIFY", result.getStatus());
+        assertFalse(result.isThreatIntelligenceAvailable());
     }
 
     @Test
@@ -126,10 +147,10 @@ class UrlAnalysisServiceTest {
     }
 
     @Test
-    @DisplayName("Confirmed malicious result is never downgraded")
-    void criticalNeverDowngraded() {
+    @DisplayName("Synthetic test host does not create a fake critical result")
+    void testHostDoesNotCreateThreat() {
         ScanResponse result = service.analyze("https://testsafebrowsing.appspot.com/safe-looking-page");
-        assertTrue(result.getRiskScore() >= 75, "Critical finding should enforce minimum score of 75");
-        assertEquals("CRITICAL_RISK", result.getRiskClassification());
+        assertEquals("NOT_CONFIGURED", result.getThreatIntelligenceStatus());
+        assertEquals("LOW_RISK", result.getRiskClassification());
     }
 }

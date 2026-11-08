@@ -13,7 +13,7 @@ export default function RiskMeter({ score, classification, size = "md" }: RiskMe
   // Determine threat severity theme
   let strokeColor = "#10b981"; // emerald-500
   let textColor = "text-emerald-400";
-  let label = "Low Risk · Clean";
+  let label = "Low Risk · No pattern found";
   let badgeClasses = "bg-emerald-500/10 text-emerald-300 border-emerald-500/20";
   let dotColor = "bg-emerald-400";
 

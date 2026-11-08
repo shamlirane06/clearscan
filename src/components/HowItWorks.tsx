@@ -3,8 +3,8 @@ import { ClipboardPaste, Eye, ShieldCheck } from "lucide-react";
 const steps = [
   {
     icon: ClipboardPaste,
-    title: "Paste what you received",
-    body: "Drop in a message, a link, or scan a QR code. You stay in control of what is checked.",
+    title: "Scan a QR or paste a link",
+    body: "ClearScan reads a QR destination or a web address without opening the destination.",
   },
   {
     icon: Eye,
@@ -26,12 +26,11 @@ export default function HowItWorks() {
           How it works
         </p>
         <h2 className="mt-2 max-w-xl text-3xl font-semibold tracking-tight text-emerald-950">
-          A pause button for messages, links, and QR codes.
+          A pause before you open a link or follow a QR.
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
-          ClearScan India is being built to help people notice pressure tactics
-          before they tap. Message and link checks on this page are sample
-          previews. QR scanning still uses the existing camera flow and URL API.
+          Review the real URL checks ClearScan completed, plus whether its
+          backend and Google Safe Browsing were available for this scan.
         </p>
 
         <div className="mt-10 grid gap-4 md:grid-cols-3">

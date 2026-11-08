@@ -1,277 +1,155 @@
-# ClearScan — Scan Before You Trust 🛡️
-> Intelligent Multi-Layer QR-Code & URL Security Assistant for Modern Phishing & Digital Payment Fraud Defense.
+# ClearScan — Scan Before You Trust
 
----
+ClearScan is a QR and URL review assistant. It reads QR payloads, analyzes HTTP/HTTPS addresses for suspicious patterns, and presents an explainable risk score. It does not open scanned destinations or make payments.
 
-## 1. Project Overview & Problem Statement
+## Current capabilities
 
-### The Problem
-QR codes have become ubiquitous across payment counters, restaurant tables, flyers, and parking meters. However, QR codes are inherently **blind trusts**: humans cannot visually read the underlying destination encoded in the 2D matrix. Cybercriminals exploit this through **Quishing (QR-code phishing)** and **reverse-intent payment fraud**:
-- **Tampered Payment Stickers**: Scammers paste fraudulent QR stickers over merchant UPI and payment stands, routing payments directly to fraud accounts or sending disguised collect/mandate debits.
-- **Credential Harvesting**: QR codes that lead to near-identical lookalike websites (e.g., `g00gle.com`, `sbi-kyc-update.xyz`) to steal login credentials, banking details, or OTPs.
-- **Shortener Masking**: Links hidden behind services like `bit.ly` or `tinyurl.com` that bypass traditional email filters.
-- **Mobile Browsing Blindspots**: Mobile viewports truncate domains, obscuring deep subdomains and malicious top-level domains.
+- Camera based QR reading and manual HTTP/HTTPS URL analysis.
+- Backend heuristic checks for URL structure, suspicious domain terms and TLDs, brand lookalikes, and known shortener domains.
+- A weighted 0–100 risk score and the five classifications below.
+- Optional Google Safe Browsing v4 lookup from the Java backend. The UI distinguishes `NOT_CONFIGURED`, `CHECKED_NO_MATCH`, `MATCH_FOUND`, `UNAVAILABLE`, and `NOT_CHECKED`.
+- Local heuristic fallback when the backend times out, cannot be reached, or returns an invalid response. The report identifies itself as local-only; it does not imply a Google check occurred.
+- UPI QR payload reading (`upi://pay`): shows the VPA, payee name, amount, and currency when present. Recipient identity is unverified. ClearScan does not open a payment app or initiate a payment.
+- Browser-local scan history with a clear-all action. Stored links are reduced to their origin; URL path, query, fragment, and credentials are not retained in history.
+- Safety education content and a quiz.
 
-### The Solution: ClearScan
-ClearScan acts as an intelligent pause button before you trust or open any QR destination. Rather than merely presenting raw text or a basic binary SAFE/DANGEROUS label, ClearScan performs **modular multi-layer heuristic security inspection**, combines it with **real threat intelligence feeds**, and provides an **explainable 0–100 risk score** with granular evidence and actionable next steps.
+Message scanning is not implemented as a real analyzer and is not presented as a working scan feature. There is no user authentication or application database.
 
----
+## Screenshots
 
-## 2. Key Features
+The desktop image is a browser capture of the running app. The mobile image is the approved visual direction reference.
 
-### 🛡️ 1. Intelligent Multi-Layer URL Risk Engine
-ClearScan runs 6 comprehensive heuristic analyzers in sequence:
-- **URL & Protocol Validation**: Enforces HTTP/HTTPS protocol checks, detects raw IPv4/IPv6 hosts, non-standard ports, and double or null-byte URL encoding.
-- **SSRF Protection Shield**: Blocks attempts to scan localhost, loopback (`127.0.0.1`), private RFC 1918 subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local metadata addresses, and wildcard IPs.
-- **Suspicious Domain & TLD Detection**: Flags deep subdomains (>4 levels), phishing keywords (`kyc`, `banking`, `verify`, `urgent`), and high-abuse top-level domains (`.xyz`, `.tk`, `.ml`, `.top`, `.buzz`).
-- **Lookalike & Typosquatting Detection**: Uses algorithmic character substitution mapping (e.g., `0` for `o`, `1` for `l`, `3` for `e`) and brand containment verification against major tech and Indian banking institutions (`Google`, `Amazon`, `SBI`, `HDFC`, `ICICI`, `Paytm`, `Apple`). Punycode (`xn--`) internationalized domains are automatically flagged.
-- **URL Shortener Inspection**: Identifies redirect masking services (`bit.ly`, `tinyurl`, `t.co`, `cutt.ly`, etc.) where the final destination is obscured.
-- **URL Structural Analysis**: Analyzes excessive URL length (>200 chars), deceptive `@` symbol authorities, excessive query parameters (>10), and sensitive path keywords.
+![ClearScan dashboard in Edge](reports/clearscan-redesign/final/dashboard-desktop.png)
 
-### 🌐 2. Real Threat Intelligence Integration
-- **Google Safe Browsing API v4 Integration**: Backend evaluates URLs against global threat databases for malware, unwanted software, and social engineering.
-- **Fail-Safe Operation**: If external threat intelligence is offline or rate-limited, ClearScan **never** marks the URL as safe; it clearly discloses fallback to local heuristic analysis.
-- **Synthetic Demonstration Suite**: Pre-configured synthetic test URLs allow deterministic hackathon evaluation of confirmed malicious alerts without exposing judges to live malware.
+![Approved ClearScan mobile direction](reports/clearscan-redesign/direction-c/overview-390.png)
 
-### 📊 3. Explainable Security Results & Risk Meter
-- **0–100 Heuristic Risk Score**: Non-linear weighted scoring with diminishing returns for multiple minor flags.
-- **Floor Protection**: Confirmed critical threats automatically enforce a minimum risk score of 75.
-- **Five Standard Risk Classifications**:
-  - `0–24`: **LOW RISK** — No configured threats detected (with explicit reminder that safety is not guaranteed).
-  - `25–49`: **MODERATE RISK** — Unusual characteristics detected; caution advised.
-  - `50–74`: **HIGH RISK** — Multiple suspicious indicators; avoid opening.
-  - `75–100`: **CRITICAL RISK** — Known malicious indicator or confirmed attack pattern; do not visit.
-  - `UNABLE TO VERIFY`: Required security parsing could not complete; treat with extreme caution.
-- **Audit-Ready Evidence**: Every check item provides clear, plain-language explanations along with concrete technical evidence.
+## Risk score and demo scenarios
 
-### 🎓 4. Safety Education Mode ("Learn to Stay Safe")
-- **Interactive Knowledge Base**: Detailed walkthroughs on quishing mechanics, fake UPI payment QR traps, recognizing lookalike domains, shortener risks, and post-scan incident steps.
-- **Interactive Phishing Quiz**: 5 realistic multiple-choice scenarios with immediate feedback, detailed explanations, and score tracking.
+Risk is calculated from the checks returned by the backend; the frontend does not assign a preset score. The backend takes the highest contribution and adds 40% of each other failed check's contribution, rounds to an integer, and caps the result at 100. A `CRITICAL` check enforces a minimum of 75. No failed checks produce 0. A required parsing or input guard failure produces -1 and `UNABLE_TO_VERIFY`.
 
-### 🕒 5. Scan History & Risk Insights
-- **Privacy-First Design**: Scans are stored exclusively in the client's local browser storage (`localStorage`). No browsing history or query parameters are tracked or persisted on central databases.
-- **Filters & Search**: Filter history by risk tier, search by domain or keyword, view full drilldown security reports, or clear history in one click.
-- **Local Metrics Dashboard**: Displays total inspected items, low-risk, suspicious, and critical scan counts labeled clearly as local activity.
+| Risk score | Classification | Meaning |
+| --- | --- | --- |
+| 0–24 | `LOW_RISK` | No warning patterns were found in the checks that ran; this is not proof of safety. |
+| 25–49 | `MODERATE_RISK` | Some unusual characteristics were found. |
+| 50–74 | `HIGH_RISK` | Multiple or stronger suspicious indicators were found. |
+| 75–100 | `CRITICAL_RISK` | Critical threat intelligence or a critical risk condition was reported. |
+| -1 | `UNABLE_TO_VERIFY` | The input was unsupported, invalid, private, or required analysis could not complete. |
 
----
+The current deterministic URL presets have these backend heuristic results when threat intelligence is not configured:
 
-## 3. Technology Stack
+| Scenario | URL | Backend score |
+| --- | --- | --- |
+| Ordinary HTTPS | `https://www.wikipedia.org` | 0 (`LOW_RISK`) |
+| Google lookalike and login path | `https://g00gle.com/login` | 41 (`MODERATE_RISK`) |
+| Shortener and suspicious path | `https://bit.ly/sbi-urgent-update` | 26 (`MODERATE_RISK`) |
+| Bank lookalike, HTTP, suspicious TLD and path | `http://sbi-kyc-update.xyz/verify` | 56 (`HIGH_RISK`) |
+| Private destination | `http://localhost:8080/secret` | -1 (`UNABLE_TO_VERIFY`) |
+
+The `testsafebrowsing.appspot.com` sample is only a Google Safe Browsing test target. It is not hardcoded as malicious. A match is reported only if the configured Google service returns one; with no key or an unavailable service, the report states that threat intelligence was not checked.
+
+## Architecture
+
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS, and `html5-qrcode`. The root `package.json` is the active app.
+- **Backend:** Java 17, Spring Boot 3.2.5, Spring MVC, Jakarta validation, and Maven. Source is under `backend/`.
+- **History:** browser `localStorage`, key `clearscan_history_v1`; no database is configured.
+- **API:** `POST /api/scan`, JSON request `{ "url": "https://example.org" }`. The existing legacy `status` field is preserved; richer response fields include `riskScore`, `riskClassification`, `securityChecks`, `analysisSource`, and `threatIntelligenceStatus`.
+
+Example response shape (values are illustrative; each scan is calculated from its input and live check outcomes):
+
+```json
+{
+  "url": "https://www.wikipedia.org",
+  "status": "UNABLE_TO_VERIFY",
+  "message": "No threats were detected by the checks performed. This does not guarantee that the website is safe.",
+  "normalizedHostname": "www.wikipedia.org",
+  "riskScore": 0,
+  "riskClassification": "LOW_RISK",
+  "riskMessage": "No threats were detected by the checks performed. This does not guarantee that the website is safe.",
+  "recommendedAction": "No immediate threats detected. Still verify the domain before entering personal information.",
+  "timestamp": "2026-01-01T00:00:00Z",
+  "analysisSource": "BACKEND",
+  "threatIntelligenceAvailable": false,
+  "threatIntelligenceStatus": "NOT_CONFIGURED",
+  "securityChecks": [
+    { "checkName": "URL Validation", "passed": true, "riskContribution": 0, "riskLevel": "LOW", "explanation": "URL uses HTTPS with a valid structure.", "evidence": "" },
+    { "checkName": "Suspicious Domain Keywords", "passed": true, "riskContribution": 0, "riskLevel": "LOW", "explanation": "No suspicious keywords detected in the domain.", "evidence": "" },
+    { "checkName": "Lookalike Domain Detection", "passed": true, "riskContribution": 0, "riskLevel": "LOW", "explanation": "No brand impersonation patterns were detected.", "evidence": "" },
+    { "checkName": "URL Shortener Detection", "passed": true, "riskContribution": 0, "riskLevel": "LOW", "explanation": "This URL does not use a known URL-shortening service.", "evidence": "" },
+    { "checkName": "URL Structure Analysis", "passed": true, "riskContribution": 0, "riskLevel": "LOW", "explanation": "No suspicious structural patterns detected in the URL.", "evidence": "" },
+    { "checkName": "Threat Intelligence", "passed": false, "riskContribution": 0, "riskLevel": "INFO", "explanation": "Google Safe Browsing was not checked because it is not configured. Local URL heuristics still ran; this is not a safe-list check.", "evidence": "Service: Not configured" }
+  ],
+  "warnings": ["Google Safe Browsing was not checked because it is not configured. Local URL heuristics still ran; this is not a safe-list check."]
+}
+```
+
+Backend scanning parses the submitted URL and sends the URL string as data to the optional Safe Browsing service. It does **not** fetch destination pages, resolve destination hostnames, follow redirects, or browse arbitrary sites. The SSRF guard rejects private and special-use IP literals and local hostnames; because the scanner does not connect to destination hosts, DNS rebinding cannot redirect a destination fetch. Shortener targets are not expanded.
+
+## Setup and run
+
+Requirements: Node.js compatible with the installed Vite version, npm, and Java 17. No API key is required for local heuristic analysis.
 
 ### Frontend
-- **Framework**: React 19 + TypeScript + Vite 8
-- **Styling**: Tailwind CSS v4 + Geist Variable Font
-- **Icons**: Lucide React
-- **Camera Scanning**: `html5-qrcode` (2.3.8)
-- **Linter**: Oxlint
+
+From the repository root:
+
+```sh
+npm install
+npm run dev
+```
+
+The Vite server runs at `http://localhost:5173` by default. To point it at a different backend, set `VITE_API_BASE_URL`, for example `http://localhost:8081/api`.
 
 ### Backend
-- **Language**: Java 17
-- **Framework**: Spring Boot 3.2.5 (Spring MVC)
-- **HTTP Client**: Spring 6 `RestClient` with connect & read timeout protections
-- **Validation**: Jakarta Bean Validation API
-- **Build System**: Apache Maven 3.x
-- **Testing**: JUnit 5 + Mockito
 
----
+In another terminal:
 
-## 4. Architecture
-
-```
-ClearScan/
-├── backend/                                   # Spring Boot Java 17 Backend
-│   ├── pom.xml                                # Maven build specification
-│   └── src/
-│       ├── main/
-│       │   ├── java/com/clearscan/backend/
-│       │   │   ├── BackendApplication.java    # Application entry point
-│       │   │   ├── analyzer/                  # Modular Security Analyzers
-│       │   │   │   ├── SecurityAnalyzer.java
-│       │   │   │   ├── UrlValidationAnalyzer.java
-│       │   │   │   ├── SuspiciousDomainAnalyzer.java
-│       │   │   │   ├── LookalikeDomainAnalyzer.java
-│       │   │   │   ├── UrlShortenerAnalyzer.java
-│       │   │   │   ├── UrlStructureAnalyzer.java
-│       │   │   │   └── ThreatIntelligenceAnalyzer.java
-│       │   │   ├── config/                    # CORS & RestClient timeouts
-│       │   │   │   ├── RestClientConfig.java
-│       │   │   │   └── WebConfig.java
-│       │   │   ├── controller/                # Thin REST Controllers
-│       │   │   │   └── ScanController.java
-│       │   │   ├── dto/                       # Typed Request & Response DTOs
-│       │   │   │   ├── ScanRequest.java
-│       │   │   │   └── ScanResponse.java
-│       │   │   ├── exception/                 # Global error handling
-│       │   │   │   └── GlobalExceptionHandler.java
-│       │   │   ├── model/                     # Enums & Results
-│       │   │   │   ├── RiskClassification.java
-│       │   │   │   └── SecurityCheckResult.java
-│       │   │   ├── security/                  # SSRF & Network Protections
-│       │   │   │   └── SsrfProtection.java
-│       │   │   └── service/                   # Orchestration & Risk Calculation
-│       │   │       ├── RiskScoringService.java
-│       │   │       └── UrlAnalysisService.java
-│       │   └── resources/
-│       │       └── application.properties     # Config & Threat Intel keys
-│       └── test/                              # Automated Unit Test Suite
-│           └── java/com/clearscan/backend/
-│               ├── analyzer/LookalikeDomainAnalyzerTest.java
-│               ├── security/SsrfProtectionTest.java
-│               └── service/UrlAnalysisServiceTest.java
-└── src/                                       # React TypeScript Frontend
-    ├── components/                            # UI Components
-    │   ├── DashboardCard.tsx
-    │   ├── Footer.tsx
-    │   ├── Navbar.tsx
-    │   ├── RiskMeter.tsx
-    │   ├── Scanner.tsx
-    │   ├── SecurityCheckItem.tsx
-    │   ├── SecurityReport.tsx
-    │   └── URLInput.tsx
-    ├── pages/                                 # Multi-Page Navigation
-    │   ├── AboutPage.tsx
-    │   ├── Dashboard.tsx
-    │   ├── HistoryPage.tsx
-    │   ├── LearnPage.tsx
-    │   └── ScannerPage.tsx
-    ├── hooks/
-    │   └── useScanHistory.ts                  # LocalStorage History Hook
-    ├── services/
-    │   └── scanService.ts                     # API & Client Heuristic Fallback
-    ├── types/
-    │   └── scan.ts                            # TypeScript Interfaces
-    └── utils/
-        └── validation.ts                      # Client-side validation & SSRF checks
+```sh
+cd backend
+./mvnw spring-boot:run
 ```
 
----
+On Windows PowerShell, from `backend`, run `\.\mvnw.cmd spring-boot:run`. The server listens on port `8081`.
 
-## 5. API Documentation
+To enable Google Safe Browsing, configure the API key on the backend only:
 
-### `POST /api/scan`
-Inspects a URL against all heuristic analyzers and threat intelligence feeds.
-
-#### Request Body
-```json
-{
-  "url": "https://g00gle.com/security/login"
-}
+```sh
+GOOGLE_SAFE_BROWSING_API_KEY=your_key
+CLEARSCAN_THREAT_INTEL_ENABLED=true
 ```
 
-#### Response Body
-```json
-{
-  "url": "https://g00gle.com/security/login",
-  "status": "DANGEROUS",
-  "message": "Multiple suspicious indicators were detected. Avoid opening this link until you verify its source.",
-  "normalizedHostname": "g00gle.com",
-  "riskScore": 55,
-  "riskClassification": "HIGH_RISK",
-  "riskMessage": "Multiple suspicious indicators were detected. Avoid opening this link until you verify its source.",
-  "securityChecks": [
-    {
-      "checkName": "Lookalike Domain Detected",
-      "passed": false,
-      "riskContribution": 35,
-      "riskLevel": "HIGH",
-      "explanation": "The domain appears to impersonate \"google\" using character substitutions.",
-      "evidence": "Domain: g00gle.com | Looks like: google"
-    },
-    {
-      "checkName": "Suspicious Path Keywords",
-      "passed": false,
-      "riskContribution": 15,
-      "riskLevel": "MEDIUM",
-      "explanation": "The URL path contains sensitive keywords often used in phishing pages: login.",
-      "evidence": "Path: /security/login"
-    }
-  ],
-  "warnings": [
-    "The domain appears to impersonate \"google\" using character substitutions.",
-    "The URL path contains sensitive keywords often used in phishing pages: login."
-  ],
-  "recommendedAction": "Avoid opening this link. Multiple suspicious indicators were detected. Verify the source through trusted channels.",
-  "timestamp": "2026-11-08T00:30:00Z",
-  "threatIntelligenceAvailable": false
-}
+On PowerShell:
+
+```powershell
+$env:GOOGLE_SAFE_BROWSING_API_KEY = "your_key"
+$env:CLEARSCAN_THREAT_INTEL_ENABLED = "true"
 ```
 
-### `GET /api/health`
-Returns backend health status.
+`clearscan.threat-intel.timeout-ms` controls the backend timeout (bounded to 250–15000 ms; default 5000 ms). Never add the API key to a `VITE_` variable or frontend source. Without both the enable flag and a key, the API reports `NOT_CONFIGURED`.
 
----
+## Privacy and data handling
 
-## 6. Installation & Setup
+- Scan history exists in the current browser's local storage. The app stores only each URL origin there and removes path, query, fragment, and credentials. Clear history from the History page to delete saved records.
+- The URL submitted for analysis, including its query string, is sent from the browser to the configured ClearScan backend. If Google Safe Browsing is enabled, the backend sends the full submitted URL to Google for the lookup.
+- A UPI QR payload is parsed in the browser and is not sent to the URL scan API or added to URL history.
+- The Google API key remains on the backend. Do not paste secrets into URLs you scan.
 
-### Prerequisites
-- Node.js 18+ and npm
-- Java 17 JDK
-- Apache Maven 3.8+ (optional if using local IDE)
+## Tests and build
 
-### Backend Setup
-1. Open a terminal in `./backend`:
-   ```bash
-   cd backend
-   ```
-2. (Optional) Configure Google Safe Browsing API Key:
-   ```bash
-   # In PowerShell
-   $env:GOOGLE_SAFE_BROWSING_API_KEY="your-api-key"
-   $env:CLEARSCAN_THREAT_INTEL_ENABLED="true"
-   ```
-3. Run the Spring Boot server:
-   ```bash
-   mvn spring-boot:run
-   ```
-   *The backend runs on port 8081 (`http://localhost:8081`).*
+```sh
+npm test
+npm run build
+```
 
-### Frontend Setup
-1. Open a terminal in the root project directory:
-   ```bash
-   npm install
-   ```
-2. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
-   *The frontend runs on port 5173 (`http://localhost:5173`).*
+```sh
+cd backend
+./mvnw test
+```
 
----
+## Limitations
 
-## 7. Hackathon Demonstration Scenarios
-
-ClearScan includes a built-in **One-Click Test Suite** on both the Dashboard and the Scanner page:
-
-| Scenario | Sample Target | Expected Result | Demonstrated Capability |
-|---|---|---|---|
-| **1. Benign HTTPS** | `https://www.wikipedia.org` | **Score: 0 (LOW RISK)** | Clean HTTPS validation, standard ports, no warnings. |
-| **2. Lookalike Domain** | `https://g00gle.com/login` | **Score: 55 (HIGH RISK)** | Typosquatting character substitution algorithm (`0` -> `o`). |
-| **3. Masked Shortener** | `https://bit.ly/sbi-urgent-update` | **Score: 25+ (MODERATE RISK)** | Shortener service masking detection. |
-| **4. Bank KYC Phishing** | `http://sbi-kyc-update.xyz/verify` | **Score: 65+ (HIGH RISK)** | Unencrypted HTTP, `.xyz` high-abuse TLD, brand mismatch, keywords. |
-| **5. Synthetic Malicious** | `https://testsafebrowsing.appspot.com/malware` | **Score: 95+ (CRITICAL RISK)** | Synthetic test threat indicator, minimum floor enforcement (≥75). |
-| **6. SSRF Protection** | `http://localhost:8080/admin` | **BLOCKED (UNABLE TO VERIFY)** | SSRF shield blocking internal loopback destinations. |
-
----
-
-## 8. Honest Limitations & Disclaimer
-
-- **No Absolute Immunity**: Heuristics are probabilistic indicators. A `LOW RISK` score indicates that no configured suspicious patterns were detected, but does not guarantee the destination is free of zero-day attacks.
-- **Reporting Resources**: If money or data has been compromised, users are directed to report directly to official helplines (India: **1930** or [cybercrime.gov.in](https://cybercrime.gov.in)).
-
----
-
-## 9. Pre-existing vs. Newly Developed Components
-
-| Component | Status Before Upgrade | Upgraded / Implemented |
-|---|---|---|
-| **QR Camera Scanner** | Basic html5-qrcode scanner with simple SAFE/DANGEROUS status. | Full optical scanning with rich security report integration, error recovery, and desktop synthetic simulator. |
-| **Backend Engine** | 3 keyword string matches (`login`, `ngrok`, `bit.ly`) in controller. | 6 modular analyzers, typed DTOs, SSRF protection, configurable RestClient, and exception advice. |
-| **Risk Scoring** | Binary `SAFE` / `DANGEROUS`. | Mathematical 0–100 weighted risk scoring with 5 standard classifications. |
-| **Threat Intelligence** | None. | Google Safe Browsing API v4 integration with fallback handling and synthetic test suites. |
-| **Explainable Reports** | Static message string. | Visual SVG Risk Meter, granular evidence breakdown, and recommended actions. |
-| **Education Section** | None. | "Learn to Stay Safe" knowledge base + interactive 5-question Phishing Quiz. |
-| **Scan History** | None. | Privacy-first localStorage persistence with search, filtering, and metric stats. |
-| **Navigation & UI** | Single static page with broken anchors. | Full 6-view responsive cybersecurity interface with Lucide icons. |
-
----
-
-*ClearScan — Scan Before You Trust.* 🛡️
+- A low score is not a safe-site certification. Heuristics can miss new threats or flag legitimate unusual links.
+- Google Safe Browsing requires a valid backend API key and may be unavailable or rate-limited.
+- The backend does not follow redirects, expand short links, fetch web pages, or verify merchant/payee identity.
+- UPI names and VPAs are values supplied by the QR payload, not verified identity claims.
+- History is local to the browser. There is no sign-in, cross-device sync, database, or implemented message-scanning analyzer.
+- The scanned URL is temporarily displayed in the report and sent to the backend. Avoid scanning links containing credentials or private tokens.

@@ -37,6 +37,10 @@ public class UrlValidationAnalyzer implements SecurityAnalyzer {
             results.add(SecurityCheckResult.warning("IP Address Detection",
                     20, "URL uses a raw IP address instead of a domain name. Legitimate websites typically use domain names.",
                     "Host: " + host));
+        } else if (host != null && host.contains(":")) {
+            results.add(SecurityCheckResult.warning("IP Address Detection",
+                    20, "URL uses a raw IPv6 address instead of a domain name. Confirm the destination through a trusted source.",
+                    "Host: " + host));
         }
 
         // Check for unusual port

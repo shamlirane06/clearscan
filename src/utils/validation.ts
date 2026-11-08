@@ -8,7 +8,24 @@ export interface ValidationResult {
   errorMessage?: string;
 }
 
-const PRIVATE_IP_REGEX = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|169\.254\.)/;
+function isBlockedHost(host: string): boolean {
+  const bareHost = host.replace(/^\[|\]$/g, "").toLowerCase().replace(/\.$/, "");
+  if (["localhost", "metadata.google.internal", "home.arpa"].includes(bareHost)
+    || bareHost.endsWith(".localhost") || bareHost.endsWith(".local") || bareHost.endsWith(".internal")) return true;
+  if (bareHost.includes(":")) return bareHost === "::" || bareHost === "::1" || bareHost.startsWith("::ffff:")
+    || /^f[cd]/.test(bareHost) || /^fe[89ab]/.test(bareHost) || bareHost.startsWith("ff")
+    || bareHost.startsWith("2001:db8:") || bareHost.startsWith("2001:10:") || bareHost.startsWith("2002:")
+    || bareHost.startsWith("64:ff9b:") || bareHost.startsWith("100:");
+  if (/^(?:0x[\da-f]+|\d+)(?:\.(?:0x[\da-f]+|\d+))*$/i.test(bareHost) && !/^\d{1,3}(?:\.\d{1,3}){3}$/.test(bareHost)) return true;
+  const parts = bareHost.split(".");
+  if (parts.length !== 4 || parts.some((part) => !/^\d+$/.test(part) || Number(part) > 255)) return false;
+  if (parts.some((part) => part.length > 1 && part.startsWith("0"))) return true;
+  const [a,b,c] = parts.map(Number);
+  return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 100 && b >= 64 && b <= 127)
+    || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && (b === 0 || b === 168 || b === 88 && c === 99))
+    || (a === 198 && (b === 18 || b === 19 || b === 51 && c === 100)) || (a === 203 && b === 0 && c === 113);
+}
 
 export function validateAndNormalizeUrl(input: string): ValidationResult {
   const trimmed = input.trim();
@@ -19,6 +36,7 @@ export function validateAndNormalizeUrl(input: string): ValidationResult {
       errorMessage: "Please enter a URL to analyze.",
     };
   }
+  if (trimmed.length > 2048) return { isValid: false, normalizedUrl: "", errorMessage: "URL must not exceed 2048 characters." };
 
   // Prepend https:// if no protocol given
   const fullUrl = trimmed.includes("://") ? trimmed : `https://${trimmed}`;
@@ -52,14 +70,12 @@ export function validateAndNormalizeUrl(input: string): ValidationResult {
       };
     }
 
+    if (parsed.username || parsed.password || parsed.port === "0") {
+      return { isValid: false, normalizedUrl: fullUrl, errorMessage: "URLs with embedded credentials or invalid ports cannot be scanned." };
+    }
+
     // SSRF / Localhost prevention
-    if (
-      host === "localhost" ||
-      host === "127.0.0.1" ||
-      host === "::1" ||
-      host === "[::1]" ||
-      PRIVATE_IP_REGEX.test(host)
-    ) {
+    if (isBlockedHost(host)) {
       return {
         isValid: false,
         normalizedUrl: fullUrl,
