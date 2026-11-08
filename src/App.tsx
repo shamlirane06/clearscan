@@ -18,17 +18,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090d12] text-zinc-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-300">
-      {/* Background Subtle Cyber Security Grid */}
-      <div className="fixed inset-0 pointer-events-none bg-grid-pattern opacity-40 -z-10" />
-
+    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 antialiased selection:bg-teal-500/20 selection:text-teal-200">
       <Navbar
         activePage={activePage}
         onNavigate={setActivePage}
         historyCount={history.length}
       />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {activePage === "dashboard" && (
           <Dashboard
             stats={stats}

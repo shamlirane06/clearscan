@@ -65,24 +65,24 @@ export default function HistoryPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-800 pb-5">
         <div>
-          <div className="flex items-center gap-2">
-            <Terminal className="h-5 w-5 text-emerald-400" />
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-mono">
-              Audit Trail &amp; Telemetry Logs
+          <div className="flex items-center gap-2.5">
+            <Terminal className="h-5 w-5 text-teal-400" />
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              Audit Trail &amp; Verification Logs
             </h2>
           </div>
-          <p className="mt-1 font-mono text-xs text-zinc-400">
-            Privacy-Preserving Client Storage &bull; Indexed in local storage
+          <p className="mt-1 text-sm text-slate-400">
+            Privacy-preserving local storage of verified destinations and risk scores
           </p>
         </div>
 
         {history.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={exportCsv}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 font-mono text-xs font-semibold text-zinc-300 hover:border-zinc-700 hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Export CSV</span>
@@ -94,35 +94,35 @@ export default function HistoryPage({
                   onClearHistory();
                 }
               }}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-950/20 px-3 py-1.5 font-mono text-xs font-semibold text-rose-400 hover:bg-rose-950/40 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-950/20 px-3.5 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              <span>Purge Log</span>
+              <span>Purge Records</span>
             </button>
           </div>
         )}
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search domain, host or full URL query..."
+            placeholder="Search destination hostname, URL, or threat tokens..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full rounded-lg border border-zinc-800 bg-zinc-950/80 pl-9 pr-4 font-mono text-xs text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-emerald-500/50"
+            className="h-10 w-full rounded-lg border border-slate-700/80 bg-slate-950 pl-10 pr-4 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-teal-500"
           />
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <Filter className="h-3.5 w-3.5 text-zinc-500" />
-          <span className="font-mono text-xs text-zinc-500">Tier:</span>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <Filter className="h-4 w-4 text-slate-400" />
+          <span className="text-xs text-slate-400 font-medium">Risk Filter:</span>
           <select
             value={filterLevel}
             onChange={(e) => setFilterLevel(e.target.value)}
-            className="h-9 rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 font-mono text-xs text-zinc-300 outline-none focus:border-emerald-500/50"
+            className="h-10 rounded-lg border border-slate-700/80 bg-slate-950 px-3 text-xs text-slate-200 outline-none focus:border-teal-500"
           >
             <option value="ALL">All Records ({history.length})</option>
             <option value="LOW">Low Risk Only</option>
@@ -134,12 +134,12 @@ export default function HistoryPage({
 
       {/* Logs Table / Card List */}
       {filteredHistory.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 p-12 text-center">
-          <History className="mx-auto mb-3 h-8 w-8 text-zinc-600" />
-          <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-400">
+        <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/20 p-12 text-center">
+          <History className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+          <h4 className="text-sm font-semibold text-slate-300">
             No Records Found
           </h4>
-          <p className="mt-1 font-mono text-[11px] text-zinc-600">
+          <p className="mt-1 text-xs text-slate-400">
             {history.length === 0
               ? "Scan a QR code or inspect a URL to generate your first audit record."
               : "No records match your active search or filter criteria."}
@@ -156,52 +156,52 @@ export default function HistoryPage({
             return (
               <div
                 key={item.id}
-                className="overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-900/40 shadow-sm transition-all hover:border-zinc-700/80"
+                className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 shadow-sm transition-colors hover:border-slate-700"
               >
                 <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-xs text-white truncate">
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-semibold text-sm text-white truncate">
                         {item.normalizedHostname || item.url}
                       </span>
-                      <span className="rounded border border-zinc-800 bg-zinc-950 px-1.5 py-0.2 font-mono text-[9px] uppercase font-semibold text-zinc-400">
+                      <span className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.2 text-[10px] uppercase font-semibold text-slate-400">
                         {item.source}
                       </span>
                     </div>
-                    <p className="mt-1 truncate font-mono text-[11px] text-zinc-400">{item.url}</p>
-                    <div className="mt-1.5 flex items-center gap-3 font-mono text-[10px] text-zinc-500">
-                      <span className="flex items-center gap-1">
+                    <p className="mt-1 truncate font-mono text-xs text-slate-400">{item.url}</p>
+                    <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-400">
+                      <span className="flex items-center gap-1.5 font-mono text-[11px]">
                         <Clock className="h-3 w-3" />
                         {new Date(item.timestamp).toLocaleString()}
                       </span>
                       {item.warnings && item.warnings.length > 0 && (
-                        <span className="text-amber-400 font-semibold">
+                        <span className="text-amber-400 font-medium">
                           {item.warnings.length} warning(s)
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5 self-end sm:self-center shrink-0">
+                  <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
                     <span
-                      className={`rounded-md border px-2.5 py-1 font-mono text-xs font-bold ${
+                      className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
                         isCritical
-                          ? "border-rose-500/30 bg-rose-500/10 text-rose-400"
+                          ? "border-rose-500/30 bg-rose-500/10 text-rose-300"
                           : isHigh
-                          ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
+                          ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
                           : isModerate
-                          ? "border-yellow-500/20 bg-yellow-500/10 text-yellow-400"
-                          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                          ? "border-yellow-500/20 bg-yellow-500/10 text-yellow-300"
+                          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
                       }`}
                     >
-                      SCORE: {item.riskScore >= 0 ? item.riskScore : "—"}
+                      Score: {item.riskScore >= 0 ? item.riskScore : "—"}
                     </span>
 
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1 font-mono text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:text-white transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs font-medium text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
                     >
-                      <span>{isExpanded ? "COLLAPSE" : "INSPECT"}</span>
+                      <span>{isExpanded ? "Collapse" : "Inspect Dossier"}</span>
                       {isExpanded ? (
                         <ChevronUp className="h-3.5 w-3.5" />
                       ) : (
@@ -211,16 +211,16 @@ export default function HistoryPage({
 
                     <button
                       onClick={() => onRemoveItem(item.id)}
-                      className="rounded-lg border border-zinc-800 p-1 text-zinc-500 hover:border-rose-500/30 hover:bg-rose-950/20 hover:text-rose-400 transition-colors"
-                      title="Delete log record"
+                      className="rounded-lg border border-slate-700 p-1.5 text-slate-400 hover:border-rose-500/30 hover:bg-rose-950/20 hover:text-rose-400 transition-colors"
+                      title="Delete record"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
                 {isExpanded && (
-                  <div className="border-t border-zinc-800 bg-zinc-950/50 p-4">
+                  <div className="border-t border-slate-800 bg-slate-950/60 p-5">
                     <SecurityReport report={item} />
                   </div>
                 )}

@@ -9,7 +9,7 @@ import {
   Clock,
   Terminal,
   Activity,
-  Zap,
+  Shield,
 } from "lucide-react";
 import DashboardCard from "../components/DashboardCard";
 import URLInput from "../components/URLInput";
@@ -47,58 +47,55 @@ export default function Dashboard({
 
   return (
     <div className="space-y-8">
-      {/* Top Banner / Security Command Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 p-6 sm:p-8 shadow-xl">
-        <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-emerald-500/5 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-12 left-1/3 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl" />
-
+      {/* Executive Security Command Header */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-6 sm:p-8 shadow-sm">
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 font-mono text-xs font-semibold text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>ZERO-TRUST DESTINATION VERIFICATION</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+              <span>Zero-Trust Destination Verification</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white font-mono">
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
               Scan Before You Trust.
             </h1>
 
-            <p className="text-xs sm:text-sm leading-relaxed text-zinc-400">
-              Proactive multi-layer defense against quishing, disguised payment mandates, typosquatted
-              domains, and obscured redirects before opening links or entering credentials.
+            <p className="text-sm leading-relaxed text-slate-300">
+              Proactive multi-layer inspection defending against QR phishing (quishing), disguised payment mandates,
+              typosquatted lookalikes, and cloaked redirects before opening destinations or authorizing credentials.
             </p>
           </div>
 
           {/* Quick Actions */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
             <button
               onClick={() => onNavigate("scanner")}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 font-mono text-xs font-bold text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all hover:bg-emerald-400"
+              className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-teal-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             >
               <QrCode className="h-4 w-4" />
-              <span>OPTICAL CAMERA</span>
+              <span>Launch QR Scanner</span>
             </button>
 
             <button
               onClick={() => onNavigate("learn")}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2.5 font-mono text-xs font-semibold text-zinc-200 hover:border-zinc-700 hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             >
-              <GraduationCap className="h-4 w-4 text-emerald-400" />
-              <span>THREAT ACADEMY</span>
+              <GraduationCap className="h-4 w-4 text-teal-400" />
+              <span>Threat Academy</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardCard
-          title="Audit Volume"
+          title="Total Inspected"
           value={stats.total}
           description="Total links and QR codes evaluated in local session."
           icon={Activity}
           badge="Audit Trail"
-          badgeColor="bg-zinc-800 text-zinc-300 border-zinc-700"
+          badgeColor="bg-slate-800 text-slate-300 border-slate-700"
         />
         <DashboardCard
           title="Clean Targets"
@@ -106,7 +103,7 @@ export default function Dashboard({
           description="Destinations passing all 6 heuristic threat checks."
           icon={ShieldCheck}
           badge="Verified"
-          badgeColor="bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+          badgeColor="bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
         />
         <DashboardCard
           title="Suspicious Flags"
@@ -114,31 +111,31 @@ export default function Dashboard({
           description="Lookalikes, shortener masks, and credential keywords."
           icon={AlertTriangle}
           badge="Caution"
-          badgeColor="bg-amber-500/10 text-amber-400 border-amber-500/20"
+          badgeColor="bg-amber-500/10 text-amber-300 border-amber-500/20"
         />
         <DashboardCard
           title="Critical Intercepts"
           value={stats.criticalRisk}
-          description="Known malicious indicators or confirmed synthetic CVEs."
+          description="Known malicious indicators or confirmed threat CVEs."
           icon={ShieldAlert}
           badge="Critical"
-          badgeColor="bg-rose-500/15 text-rose-400 border-rose-500/30"
+          badgeColor="bg-rose-500/15 text-rose-300 border-rose-500/30"
         />
       </div>
 
-      {/* Main Focus: Dual Core Inspection Center */}
+      {/* Main Focus: Dual Inspection Workstation */}
       <div className="grid gap-6 lg:grid-cols-12 items-start">
         {/* Left Column: Command Bar Inspector & Results (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6 shadow-xl backdrop-blur-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-emerald-400" />
-                <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
-                  Manual Destination Inspector
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <Terminal className="h-4 w-4 text-teal-400" />
+                <h3 className="text-sm font-semibold text-slate-100">
+                  Direct Destination Inspector
                 </h3>
               </div>
-              <span className="font-mono text-[10px] text-zinc-500">SSRF SHIELD READY</span>
+              <span className="text-xs text-slate-400">SSRF Guard Active</span>
             </div>
 
             <URLInput onScan={handleQuickScan} loading={loading} />
@@ -149,29 +146,29 @@ export default function Dashboard({
           )}
 
           {/* Recent Audit Feed */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-xl space-y-3">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-zinc-400" />
-                <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-zinc-300">
+                <Clock className="h-4 w-4 text-slate-400" />
+                <h3 className="text-sm font-semibold text-slate-200">
                   Recent Audit Trail
                 </h3>
               </div>
               <button
                 onClick={() => onNavigate("history")}
-                className="font-mono text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                className="text-xs font-medium text-teal-400 hover:text-teal-300 flex items-center gap-1 transition-colors"
               >
                 <span>Full Audit Log</span>
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
 
             {recentScans.length === 0 ? (
-              <div className="py-6 text-center font-mono text-xs text-zinc-600">
-                NO AUDIT LOGS RECORDED YET IN THIS SESSION
+              <div className="py-8 text-center text-xs text-slate-400">
+                No destinations recorded yet in this session. Analyze a URL or QR code above.
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {recentScans.slice(0, 4).map((scan) => {
                   const isCritical = scan.riskScore >= 75 || scan.riskClassification === "CRITICAL_RISK";
                   const isHigh = scan.riskScore >= 50 && scan.riskScore < 75;
@@ -180,30 +177,30 @@ export default function Dashboard({
                   return (
                     <div
                       key={scan.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-3 text-xs transition-colors hover:border-zinc-700"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 text-xs transition-colors hover:border-slate-700"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-semibold text-zinc-200 truncate">
+                          <span className="font-medium text-slate-200 truncate">
                             {scan.normalizedHostname || scan.url}
                           </span>
-                          <span className="rounded border border-zinc-800 px-1 font-mono text-[9px] uppercase text-zinc-500">
+                          <span className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.2 text-[10px] uppercase font-semibold text-slate-400">
                             {scan.source}
                           </span>
                         </div>
-                        <p className="font-mono text-[10px] text-zinc-500 truncate pt-0.5">{scan.url}</p>
+                        <p className="font-mono text-[11px] text-slate-400 truncate pt-1">{scan.url}</p>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
                         <span
-                          className={`rounded-md border px-2 py-0.5 font-mono text-[10px] font-bold ${
+                          className={`rounded-md border px-2.5 py-0.5 text-[11px] font-semibold ${
                             isCritical
-                              ? "border-rose-500/30 bg-rose-500/10 text-rose-400"
+                              ? "border-rose-500/30 bg-rose-500/10 text-rose-300"
                               : isHigh
-                              ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
+                              ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
                               : isModerate
-                              ? "border-yellow-500/20 bg-yellow-500/10 text-yellow-400"
-                              : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                              ? "border-yellow-500/20 bg-yellow-500/10 text-yellow-300"
+                              : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
                           }`}
                         >
                           Score: {scan.riskScore >= 0 ? scan.riskScore : "—"}
@@ -221,15 +218,15 @@ export default function Dashboard({
         <div className="lg:col-span-5 space-y-6">
           <Scanner onScanComplete={onScanComplete} />
 
-          {/* Zero-Trust Telemetry Advisory */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
-              <Zap className="h-3.5 w-3.5" />
+          {/* Zero-Trust Security Advisory */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-teal-300">
+              <Shield className="h-4 w-4" />
               <span>Zero-Trust Security Advisory</span>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Attacker stickers on physical parking meters and merchant stands are the #1 source of UPI quishing.
-              Never authorize a PIN to <em>receive</em> funds.
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Attacker stickers on physical parking meters, retail counters, and flyers are the leading vector for UPI quishing.
+              Remember: You never enter a PIN or scan a code to <em>receive</em> funds.
             </p>
           </div>
         </div>

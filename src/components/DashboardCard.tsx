@@ -15,27 +15,27 @@ export default function DashboardCard({
   description,
   icon: Icon,
   badge,
-  badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  badgeColor = "bg-teal-500/10 text-teal-300 border-teal-500/20",
 }: DashboardCardProps) {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5 transition-all hover:border-zinc-700/80">
+    <div className="group relative overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/60 p-5 transition-all hover:border-slate-700 hover:bg-slate-900/80">
       <div className="flex items-center justify-between">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700/60 bg-slate-800/80 text-slate-300 group-hover:text-white transition-colors">
           <Icon className="h-4 w-4" />
         </span>
         {badge && (
-          <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wider uppercase ${badgeColor}`}>
+          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-wide ${badgeColor}`}>
             {badge}
           </span>
         )}
       </div>
 
-      <div className="mt-3.5 space-y-1">
-        <p className="font-mono text-2xl font-bold tracking-tight text-white">{value}</p>
-        <h4 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+      <div className="mt-4 space-y-1">
+        <p className="font-mono text-3xl font-bold tracking-tight text-white">{value}</p>
+        <h4 className="text-sm font-medium text-slate-200">
           {title}
         </h4>
-        <p className="text-xs text-zinc-500 leading-relaxed pt-1">{description}</p>
+        <p className="text-xs text-slate-400 leading-relaxed pt-1">{description}</p>
       </div>
     </div>
   );
