@@ -1,10 +1,10 @@
 # ClearScan — Scan Before You Trust
 
-ClearScan is a QR and URL review assistant. It reads QR payloads, analyzes HTTP/HTTPS addresses for suspicious patterns, and presents an explainable risk score. It does not open scanned destinations or make payments.
+ClearScan is a QR and URL review assistant for anyone who wants to check a code or link before opening it, especially people receiving QR codes in public spaces, messages, invoices, or payment requests. QR codes can hide lookalike login pages, shortened destinations, or UPI payment details. ClearScan reads the destination first, explains the indicators it found, and gives the user a safer next step. It does not open scanned destinations or make payments.
 
 ## Current capabilities
 
-- Camera based QR reading and manual HTTP/HTTPS URL analysis.
+- User-initiated camera QR reading, QR image upload (images up to 10 MB), and manual HTTP/HTTPS URL analysis. Camera/image decoding and UPI parsing run in the browser; only web URLs are sent to the scan API.
 - Backend heuristic checks for URL structure, suspicious domain terms and TLDs, brand lookalikes, and known shortener domains.
 - A weighted 0–100 risk score and the five classifications below.
 - Optional Google Safe Browsing v4 lookup from the Java backend. The UI distinguishes `NOT_CONFIGURED`, `CHECKED_NO_MATCH`, `MATCH_FOUND`, `UNAVAILABLE`, and `NOT_CHECKED`.
@@ -17,11 +17,11 @@ Message scanning is not implemented as a real analyzer and is not presented as a
 
 ## Screenshots
 
-The desktop image is a browser capture of the running app. The mobile image is the approved visual direction reference.
+Both images are captures of the running application: desktop at 1440 × 1000 and mobile at a 390 × 844 CSS viewport.
 
-![ClearScan dashboard in Edge](reports/clearscan-redesign/final/dashboard-desktop.png)
+![ClearScan running at 1440 pixels wide](reports/clearscan-redesign/final/clearscan-live-desktop.png)
 
-![Approved ClearScan mobile direction](reports/clearscan-redesign/direction-c/overview-390.png)
+![ClearScan running at a 390-pixel mobile viewport](reports/clearscan-redesign/final/clearscan-live-mobile-390.png)
 
 ## Risk score and demo scenarios
 
@@ -48,6 +48,20 @@ The current deterministic URL presets have these backend heuristic results when 
 The `testsafebrowsing.appspot.com` sample is only a Google Safe Browsing test target. It is not hardcoded as malicious. A match is reported only if the configured Google service returns one; with no key or an unavailable service, the report states that threat intelligence was not checked.
 
 ## Architecture
+
+```mermaid
+flowchart LR
+  Person["User"] --> Browser["React + TypeScript app"]
+  Browser -->|"camera or image QR decode"| QR["QR payload"]
+  QR -->|"upi://pay"| Review["UPI detail review in browser"]
+  QR -->|"HTTP/HTTPS URL"| API["POST /api/scan"]
+  Browser -->|"manual URL"| API
+  API --> Analysis["Spring Boot heuristic analysis"]
+  Analysis -->|"optional URL lookup"| GSB["Google Safe Browsing"]
+  Analysis --> Result["Score, evidence, action, check status"]
+  Result --> Browser
+  Browser -->|"origin-only records"| History["Browser localStorage"]
+```
 
 - **Frontend:** React, TypeScript, Vite, Tailwind CSS, and `html5-qrcode`. The root `package.json` is the active app.
 - **Backend:** Java 17, Spring Boot 3.2.5, Spring MVC, Jakarta validation, and Maven. Source is under `backend/`.
@@ -108,7 +122,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-On Windows PowerShell, from `backend`, run `\.\mvnw.cmd spring-boot:run`. The server listens on port `8081`.
+On Windows PowerShell, from `backend`, run `./mvnw.cmd spring-boot:run`. The server listens on port `8081`.
 
 To enable Google Safe Browsing, configure the API key on the backend only:
 
@@ -145,6 +159,17 @@ cd backend
 ./mvnw test
 ```
 
+Results from this readiness pass:
+
+- `npm test`: passed, 25 tests across 5 files.
+- `npm run build`: passed TypeScript compilation and Vite production build. Vite reports a 702 kB minified JavaScript chunk, above its 500 kB advisory threshold.
+- `cd backend; .\mvnw.cmd test`: passed, 39 tests, including MockMvc calls through `POST /api/scan` for the safe sample, synthetic phishing sample, localhost, and `upi://` rejection. SSRF, risk classifications, Safe Browsing failure states, and scoring are covered.
+- Browser check: the manual URL form and safe/phishing demos rendered through the frontend analyzer; with no backend process running, reports identified local-only checks and Google Safe Browsing as not checked. The safe example returned 0 / `LOW_RISK`; the phishing example returned 56 / high risk with five evidence-backed warnings and did not navigate. The UPI sample displayed the supplied VPA, ₹100 amount, and unverified-identity warning, with no payment action. Camera remains off until the user chooses **Start camera**.
+- Isolated browser history check: the phishing URL was saved as `http://sbi-kyc-update.xyz` only, matched the high-risk filter, and was deleted by the row action. No existing browser history was touched.
+- Responsive layout probes reported zero horizontal overflow at 390, 768, and 1440 CSS pixels. Camera access was not granted in the headless browser; physical camera capture is not verified. QR image decoding is wired to the installed `html5-qrcode` `scanFile` API and type/build checked, but no separate image fixture decode was exercised in this pass.
+- Backend tests ran on the available Java 25 runtime with Maven compiler target `--release 17`; a standalone Java 17 runtime was not installed in this environment.
+- `npm run lint`: completed with 3 warnings in pre-existing shared UI modules and the Web Uplift runner.
+
 ## Limitations
 
 - A low score is not a safe-site certification. Heuristics can miss new threats or flag legitimate unusual links.
@@ -153,3 +178,33 @@ cd backend
 - UPI names and VPAs are values supplied by the QR payload, not verified identity claims.
 - History is local to the browser. There is no sign-in, cross-device sync, database, or implemented message-scanning analyzer.
 - The scanned URL is temporarily displayed in the report and sent to the backend. Avoid scanning links containing credentials or private tokens.
+
+## SafeSpace Hacks 2026
+
+### What existed in the project
+
+The repository history shows the existing ClearScan project already had the React/Vite interface, backend URL heuristics and weighted risk scoring, camera QR reading, manual URL analysis, browser-local history, and security education. The history also shows a 2026-11-08 security-analysis update containing the UPI payload parser, Google Safe Browsing status handling, stronger URL/SSRF guards, history redaction, and related tests. These are treated as existing project work rather than newly claimed challenge work.
+
+### Readiness work added for this demonstration
+
+- Added QR image upload using the existing `html5-qrcode` decoder, with clear decode errors and a 10 MB file-size limit. The image stays in the browser.
+- Added a reproducible three-scenario QR demo: ordinary HTTPS, a synthetic bank lookalike URL, and a synthetic UPI payment payload. The URL examples use the same backend scoring path as a manual scan; the UPI example uses the real parser and does not call the URL API.
+- Added a history filter for `UNABLE_TO_VERIFY` records and improved the scanner retry path after camera or image errors.
+- Expanded this README with the real workflow, architecture, privacy boundaries, and demo instructions.
+
+The available repository history does not identify the official challenge start date, so the distinction above is based on the checked-in history and this readiness pass, not an independent event timeline.
+
+### Practical safety improvement and demo outcomes
+
+For the phishing demo, ClearScan analyzes `http://sbi-kyc-update.xyz/verify`, shows the backend score and its checks, and recommends not opening it. The analyzer submits the URL string to the ClearScan API but never visits the destination. For the payment demo, it extracts `Demo Store`, `demostore@upi`, and ₹100 INR from `upi://pay?pa=demostore%40upi&pn=Demo%20Store&am=100&cu=INR`; the UI explains that the QR-supplied recipient identity is unverified and offers no payment action.
+
+One safer outcome is that a person can inspect a QR destination or payment request before choosing whether to proceed. One honest limitation is that heuristic checks can miss a new threat, and ClearScan does not verify merchant identity or certify a low-risk URL as safe.
+
+### Exact demonstration steps
+
+1. Start the backend and frontend as described below.
+2. Open **Scan** and select **Camera Scanner**. Allow camera access to test the live reader, or select **Upload QR image** to decode an image.
+3. Choose **Safe example · HTTPS**. Review the actual result and notice that a low heuristic score is not a safety guarantee. Google Safe Browsing shows its actual configured/unavailable state.
+4. Reset, then choose **Synthetic phishing · lookalike**. Review the score, failed checks, evidence, and recommended action. Do not open the shown destination.
+5. Reset, then choose **UPI payment QR · synthetic**. Confirm the payee and ₹100 INR display and the unverified-identity warning. No payment app is opened and no payment is initiated.
+6. From **History**, search/filter results, delete an individual row, or clear all local history. URL records retain only the origin.

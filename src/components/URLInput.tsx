@@ -9,43 +9,11 @@ interface URLInputProps {
   onInputChange?: () => void;
 }
 
-const DEMO_PRESETS = [
-  {
-    label: "Ordinary HTTPS",
-    url: "https://www.wikipedia.org",
-    badge: "HTTPS",
-    badgeClass: "border-slate-700 text-slate-300 bg-slate-800",
-  },
-  {
-    label: "Lookalike Domain",
-    url: "https://g00gle.com/security/login",
-    badge: "Lookalike",
-    badgeClass: "border-amber-500/30 text-amber-300 bg-amber-500/10",
-  },
-  {
-    label: "Shortened Redirect",
-    url: "https://bit.ly/sbi-urgent-update",
-    badge: "Shortened URL",
-    badgeClass: "border-yellow-500/30 text-yellow-300 bg-yellow-500/10",
-  },
-  {
-    label: "Fake Bank KYC",
-    url: "http://sbi-kyc-update.xyz/verify",
-    badge: "Suspicious signals",
-    badgeClass: "border-rose-500/30 text-rose-300 bg-rose-500/10",
-  },
-  {
-    label: "Safe Browsing test URL",
-    url: "https://testsafebrowsing.appspot.com/malware",
-    badge: "Requires live API",
-    badgeClass: "border-rose-500/40 text-rose-300 bg-rose-500/20",
-  },
-  {
-    label: "Localhost Blocked",
-    url: "http://localhost:8080/secret",
-    badge: "SSRF Shield",
-    badgeClass: "border-slate-700 text-slate-300 bg-slate-800",
-  },
+const QUICK_LINKS = [
+  { label: "Google", url: "https://www.google.com" },
+  { label: "YouTube", url: "https://www.youtube.com" },
+  { label: "WhatsApp", url: "https://www.whatsapp.com" },
+  { label: "Facebook", url: "https://www.facebook.com" },
 ];
 
 export default function URLInput({ onScan, loading, initialUrl = "", onInputChange }: URLInputProps) {
@@ -71,18 +39,12 @@ export default function URLInput({ onScan, loading, initialUrl = "", onInputChan
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div>
-        <div className="mb-2 flex flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:justify-between">
-          <label htmlFor="url-field" className="text-xs font-medium text-slate-300">
-            Paste an HTTP or HTTPS link
-          </label>
-          <span className="text-xs text-slate-400">
-            UPI details are shown when read from a QR code
-          </span>
-        </div>
+        <label htmlFor="url-field" className="sr-only">Paste an HTTP or HTTPS link</label>
+        <span className="sr-only">Your link is not opened</span>
 
-        <form onSubmit={handleSubmit} className="url-form relative flex items-center">
+        <form onSubmit={handleSubmit} className="url-form flex items-center gap-2.5">
           <div className="url-field-wrap relative flex-1">
             <Link2 className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -96,8 +58,8 @@ export default function URLInput({ onScan, loading, initialUrl = "", onInputChan
                 onInputChange?.();
                 if (validationError) setValidationError("");
               }}
-              placeholder="Paste or enter a URL"
-              className="url-input-control h-12 w-full rounded-xl border border-slate-700/80 bg-slate-950/80 pl-10 pr-28 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-teal-500 focus:ring-1 focus:ring-teal-500/40"
+              placeholder="Paste or enter a URL..."
+              className="url-input-control h-10 w-full rounded-lg border border-slate-700 bg-slate-950 pl-10 pr-10 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 xl:h-12"
             />
             {url && (
               <button
@@ -107,7 +69,7 @@ export default function URLInput({ onScan, loading, initialUrl = "", onInputChan
                   setUrl("");
                   onInputChange?.();
                 }}
-                className="url-clear-button absolute right-24 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                className="url-clear-button absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-slate-200 xl:h-11 xl:w-11"
                 title="Clear input"
               >
                 <X className="h-4 w-4" />
@@ -118,13 +80,16 @@ export default function URLInput({ onScan, loading, initialUrl = "", onInputChan
           <button
             type="submit"
             disabled={loading || !url.trim()}
-            className="url-submit-button ink-action absolute right-1.5 inline-flex h-11 min-w-24 items-center justify-center gap-1.5 rounded-lg px-3.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+            className="url-submit-button ink-action inline-flex h-10 min-w-32 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 xl:h-12 xl:min-w-44 xl:px-5 xl:text-base"
           >
             {loading ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+              <>
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+                <span>Checking</span>
+              </>
             ) : (
               <>
-                <span>Analyze</span>
+                <span>Analyze URL</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </>
             )}
@@ -139,36 +104,31 @@ export default function URLInput({ onScan, loading, initialUrl = "", onInputChan
         )}
       </div>
 
-      {/* Preset test targets */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5 space-y-2.5 sm:p-4">
-        <div className="flex flex-col gap-0.5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-          <span className="font-medium text-slate-300">
-            Quick Scenario Presets
+      <div className="border-t border-slate-700 pt-2">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+          <span className="inline-flex min-h-8 shrink-0 items-center text-xs font-medium text-slate-400 xl:text-sm">
+            Try quick links:
           </span>
-          <span className="text-[11px] text-slate-400">Fill a sample link</span>
-        </div>
-
-        <div className="flex flex-wrap gap-2 pt-0.5">
-          {DEMO_PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              onClick={() => {
-                handleSelectPreset(preset.url);
-                onInputChange?.();
-              }}
-              className={`group flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${
-                url === preset.url
-                  ? "border-teal-500/50 bg-teal-500/15 text-teal-200"
-                  : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700 hover:text-white hover:bg-slate-900"
-              }`}
-            >
-              <span className="font-medium">{preset.label}</span>
-              <span className={`rounded border px-1.5 py-0.2 text-[10px] font-medium ${preset.badgeClass}`}>
-                {preset.badge}
-              </span>
-            </button>
-          ))}
+          <div className="flex flex-wrap gap-1.5">
+            {QUICK_LINKS.map((link) => (
+              <button
+                key={link.label}
+                type="button"
+                aria-pressed={url === link.url}
+                onClick={() => {
+                  handleSelectPreset(link.url);
+                  onInputChange?.();
+                }}
+                className={`min-h-8 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 xl:text-sm ${
+                  url === link.url
+                    ? "border-teal-600 bg-teal-950 text-teal-700"
+                    : "border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800"
+                }`}
+              >
+                {link.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

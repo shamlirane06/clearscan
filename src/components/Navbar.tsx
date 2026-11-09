@@ -46,63 +46,54 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand identity */}
-        <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-950">
+      <div className="mx-auto flex h-14 w-full max-w-none items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 xl:h-[84px] xl:pl-8 xl:pr-7">
+        <div className="flex min-w-0 items-center">
           <button
+            type="button"
             onClick={() => handleNavClick("dashboard")}
-            className="flex items-center gap-3 text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-lg"
+            className="flex items-center gap-2.5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:hidden"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-teal-500/30 bg-teal-500/10 text-teal-400 transition-colors group-hover:border-teal-500/50 group-hover:bg-teal-500/15">
-              <ShieldCheck className="h-5 w-5" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-950 text-teal-700">
+              <ShieldCheck className="h-[18px] w-[18px]" aria-hidden="true" />
             </span>
-            <div className="leading-tight">
-              <div className="flex items-center gap-2">
-                <span className="text-base font-semibold tracking-tight text-white group-hover:text-slate-100 transition-colors">
-                  ClearScan
-                </span>
-              </div>
-              <span className="text-xs text-slate-400 hidden sm:block">
-                QR &amp; link safety
-              </span>
-            </div>
+            <span className="leading-tight">
+              <span className="block text-sm font-semibold text-slate-100">ClearScan</span>
+              <span className="block text-xs text-slate-400">QR &amp; link safety</span>
+            </span>
           </button>
-
-          {/* Real-time system status */}
-          <div className="hidden xl:flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1 text-xs text-slate-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            <span className="font-medium text-slate-300">Local checks ready</span>
+        <div className="hidden items-center gap-2 text-sm text-slate-400 lg:flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+          <span className="font-medium text-slate-300">Local checks ready</span>
           </div>
         </div>
 
-        {/* Primary Action Button */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3 xl:gap-5">
           <button
+            type="button"
             onClick={() => handleNavClick("scanner")}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-teal-500/40 bg-teal-500/10 px-3.5 text-xs font-semibold text-teal-300 transition-colors hover:bg-teal-500/20 hover:border-teal-500/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+            aria-label="Scan QR code"
+            className="ink-action inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 sm:px-3.5 xl:min-h-11 xl:px-4 xl:text-sm"
           >
-            <QrCode className="h-4 w-4" />
-            <span>Scan QR Code</span>
+            <QrCode className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Scan QR Code</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-controls="mobile-navigation"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:hidden"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
           </button>
         </div>
-
-        {/* Mobile Hamburger Button */}
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-controls="mobile-navigation"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={mobileMenuOpen}
-        >
-          {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </button>
       </div>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div id="mobile-navigation" className="border-t border-slate-800 bg-slate-950 px-4 py-3 lg:hidden">
+        <div id="mobile-navigation" className="border-t border-slate-700 bg-slate-950 px-4 py-3 lg:hidden">
           <nav aria-label="Primary" className="flex flex-col gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -113,18 +104,18 @@ export default function Navbar({
                   type="button"
                   onClick={() => handleNavClick(item.id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex min-h-11 items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`cs-nav-item flex min-h-11 items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-slate-800 text-white border border-slate-700/60"
+                      ? "border border-teal-600/15 bg-teal-500/10 text-teal-700"
                       : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`h-4 w-4 ${isActive ? "text-teal-400" : "text-slate-500"}`} />
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`h-4 w-4 ${isActive ? "text-teal-600" : "text-slate-500"}`} aria-hidden="true" />
                     <span>{item.label}</span>
                   </div>
                   {item.badge !== undefined && (
-                    <span className="rounded-full bg-teal-500/15 border border-teal-500/30 px-2 py-0.5 text-xs font-semibold text-teal-300">
+                  <span className="rounded-full bg-teal-950 px-2 py-0.5 text-xs font-semibold text-teal-700">
                       {item.badge}
                     </span>
                   )}
@@ -132,13 +123,13 @@ export default function Navbar({
               );
             })}
 
-            <div className="mt-2 pt-2 border-t border-slate-800/80">
+            <div className="mt-2 border-t border-slate-700 pt-2">
               <button
                 type="button"
                 onClick={() => handleNavClick("scanner")}
-                className="ink-action w-full flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+                className="ink-action flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
               >
-                <QrCode className="h-4 w-4" />
+                <QrCode className="h-4 w-4" aria-hidden="true" />
                 <span>Launch Camera Scanner</span>
               </button>
             </div>

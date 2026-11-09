@@ -11,32 +11,32 @@ export default function RiskMeter({ score, classification, size = "md" }: RiskMe
   const displayScore = isUnableToVerify ? "—" : Math.max(0, Math.min(100, score));
 
   // Determine threat severity theme
-  let strokeColor = "#10b981"; // emerald-500
+  let strokeColor = "var(--color-emerald-400)";
   let textColor = "text-emerald-400";
   let label = "Low Risk · No pattern found";
   let badgeClasses = "bg-emerald-500/10 text-emerald-300 border-emerald-500/20";
   let dotColor = "bg-emerald-400";
 
   if (isUnableToVerify) {
-    strokeColor = "#64748b"; // slate-500
+    strokeColor = "var(--color-slate-500)";
     textColor = "text-slate-400";
     label = "Unable to Verify";
     badgeClasses = "bg-slate-800 text-slate-300 border-slate-700";
     dotColor = "bg-slate-400";
   } else if (score >= 75) {
-    strokeColor = "#f43f5e"; // rose-500
+    strokeColor = "var(--color-rose-400)";
     textColor = "text-rose-400";
     label = "Critical Risk · Blocked";
     badgeClasses = "bg-rose-500/10 text-rose-300 border-rose-500/30";
     dotColor = "bg-rose-500";
   } else if (score >= 50) {
-    strokeColor = "#f59e0b"; // amber-500
+    strokeColor = "var(--color-amber-400)";
     textColor = "text-amber-400";
     label = "High Risk · Caution";
     badgeClasses = "bg-amber-500/10 text-amber-300 border-amber-500/30";
     dotColor = "bg-amber-500";
   } else if (score >= 25) {
-    strokeColor = "#eab308"; // yellow-500
+    strokeColor = "var(--color-yellow-400)";
     textColor = "text-yellow-400";
     label = "Moderate Risk · Suspect";
     badgeClasses = "bg-yellow-500/10 text-yellow-300 border-yellow-500/30";
@@ -72,7 +72,7 @@ export default function RiskMeter({ score, classification, size = "md" }: RiskMe
           <path
             d="M 16 85 A 64 64 0 0 1 144 85"
             fill="none"
-            stroke="#1e293b"
+            stroke="var(--color-slate-700)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
@@ -86,7 +86,7 @@ export default function RiskMeter({ score, classification, size = "md" }: RiskMe
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            className="transition-all duration-700 ease-out"
+            className="transition-[stroke-dashoffset] duration-300 ease-out"
           />
         </svg>
 
@@ -95,7 +95,7 @@ export default function RiskMeter({ score, classification, size = "md" }: RiskMe
           <span className={`font-mono font-bold tracking-tight ${dimensions.fontSize} ${textColor}`}>
             {displayScore}
           </span>
-          <span className="text-[10px] font-medium tracking-wider text-slate-400 uppercase">
+          <span className="text-xs font-medium text-slate-400">
             Threat Index
           </span>
         </div>
@@ -104,7 +104,7 @@ export default function RiskMeter({ score, classification, size = "md" }: RiskMe
       {/* Severity Status Badge */}
       <div className="mt-2.5">
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium tracking-normal ${badgeClasses}`}
+          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium tracking-normal ${badgeClasses}`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
           {label}

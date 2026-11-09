@@ -79,7 +79,7 @@ export default function LearnPage() {
           <button
             onClick={() => setActiveTab("modules")}
             aria-pressed={activeTab === "modules"}
-            className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
+            className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors ${
               activeTab === "modules"
                 ? "bg-slate-800 text-white shadow-sm border border-slate-700/60"
                 : "text-slate-400 hover:text-slate-200"
@@ -91,7 +91,7 @@ export default function LearnPage() {
           <button
             onClick={() => setActiveTab("quiz")}
             aria-pressed={activeTab === "quiz"}
-            className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
+            className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors ${
               activeTab === "quiz"
                 ? "bg-slate-800 text-white shadow-sm border border-slate-700/60"
                 : "text-slate-400 hover:text-slate-200"

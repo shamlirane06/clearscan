@@ -40,6 +40,7 @@ export default function HistoryPage({
     if (filterLevel === "ALL") return true;
     if (filterLevel === "LOW") return item.riskClassification === "LOW_RISK";
     if (filterLevel === "MODERATE") return item.riskClassification === "MODERATE_RISK";
+    if (filterLevel === "UNABLE") return item.riskClassification === "UNABLE_TO_VERIFY";
     if (filterLevel === "HIGH_OR_CRITICAL")
       return (
         item.riskClassification === "HIGH_RISK" ||
@@ -113,7 +114,7 @@ export default function HistoryPage({
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search destination hostname, URL, or threat tokens..."
+            placeholder="Search saved destination hostname..."
             aria-label="Search scan history"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -134,6 +135,7 @@ export default function HistoryPage({
             <option value="LOW">Low Risk Only</option>
             <option value="MODERATE">Moderate Risk</option>
             <option value="HIGH_OR_CRITICAL">High &amp; Critical Only</option>
+            <option value="UNABLE">Unable to Verify</option>
           </select>
         </div>
       </div>

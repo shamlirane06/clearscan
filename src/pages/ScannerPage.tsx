@@ -50,7 +50,7 @@ export default function ScannerPage({
           <button
             onClick={() => setTab("qr")}
             aria-pressed={tab === "qr"}
-            className={`flex min-h-11 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-medium transition-all ${
+            className={`flex min-h-11 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-medium transition-colors ${
               tab === "qr"
                 ? "bg-slate-800 text-white shadow-sm border border-slate-700/60"
                 : "text-slate-400 hover:text-slate-200"
@@ -62,7 +62,7 @@ export default function ScannerPage({
           <button
             onClick={() => setTab("url")}
             aria-pressed={tab === "url"}
-            className={`flex min-h-11 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-medium transition-all ${
+            className={`flex min-h-11 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-medium transition-colors ${
               tab === "url"
                 ? "bg-slate-800 text-white shadow-sm border border-slate-700/60"
                 : "text-slate-400 hover:text-slate-200"

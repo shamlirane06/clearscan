@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   LoaderCircle,
-  Sparkles,
   RefreshCw,
   Scan,
   AlertCircle,
@@ -19,14 +18,21 @@ interface ScannerProps {
 export default function Scanner({ onScanComplete }: ScannerProps) {
   const [scanState, setScanState] = useState<"idle" | "scanning" | "analyzing" | "result">("scanning");
   const [cameraError, setCameraError] = useState("");
+  const [cameraRequested, setCameraRequested] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [processError, setProcessError] = useState("");
+  const [cameraActive, setCameraActive] = useState(false);
   const [scanResult, setScanResult] = useState<BackendScanResponse | null>(null);
   const [upiDetails, setUpiDetails] = useState<UpiPaymentDetails | null>(null);
+  const [cameraAttempt, setCameraAttempt] = useState(0);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const startingRef = useRef(false);
   const processedRef = useRef(false);
 
   const handleProcessUrl = useCallback(
     async (url: string) => {
+      setProcessError("");
       const payment = parseUpiPayPayload(url);
       if (payment) {
         setUpiDetails(payment);
@@ -43,6 +49,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
           onScanComplete(response);
         }
       } catch {
+        setProcessError("ClearScan could not complete the analysis. Try again or check that the backend is running.");
         setScanState("result");
       }
     },
@@ -80,7 +87,9 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
           },
           () => {}
         );
+        if (!cancelled) setCameraActive(true);
       } catch {
+        setCameraActive(false);
         if (!cancelled) {
           setCameraError(
             "Camera access is restricted or unavailable on this device. You can grant camera permission in your browser or select a test scenario below."
@@ -91,13 +100,14 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
       }
     }
 
-    if (scanState === "scanning") {
+    if (scanState === "scanning" && cameraRequested) {
       void startCamera();
     }
 
     return () => {
       cancelled = true;
       const scanner = scannerRef.current;
+      setCameraActive(false);
       if (scanner) {
         void (async () => {
           try {
@@ -110,15 +120,44 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
         })();
       }
     };
-  }, [scanState, handleProcessUrl]);
+  }, [scanState, cameraRequested, handleProcessUrl, cameraAttempt]);
 
   function handleReset() {
     setScanResult(null);
     setUpiDetails(null);
     setCameraError("");
+    setImageError("");
+    setProcessError("");
+    setCameraRequested(false);
     processedRef.current = false;
     setScanState("scanning");
+    setCameraAttempt((attempt) => attempt + 1);
   }
+
+  const handleImageUpload = async (file?: File) => {
+    if (!file) return;
+    setImageError("");
+    if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) {
+      setImageError("Choose an image file smaller than 10 MB.");
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      return;
+    }
+    processedRef.current = true;
+      const scanner = scannerRef.current ?? new Html5Qrcode("qr-reader");
+      scannerRef.current = scanner;
+    try {
+      if (!scanner) throw new Error("The QR reader is not ready yet. Try again in a moment.");
+      if (scanner.isScanning) await scanner.stop();
+      const decoded = await scanner.scanFile(file, false);
+      await handleProcessUrl(decoded);
+    } catch {
+      processedRef.current = false;
+      setImageError("No readable QR code was found in that image. Try a clear, well-lit image with the full code in frame.");
+      setCameraAttempt((attempt) => attempt + 1);
+    } finally {
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
+  };
 
   // Quick synthetic QR simulation for testing on desktop
   const handleSyntheticScan = async (mockUrl: string) => {
@@ -148,13 +187,21 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
           ))}
         </dl>
         <p role="note" className="mt-5 rounded-xl border p-4 text-sm font-medium">The recipient name and VPA are supplied by the QR and are not independently verified. Confirm them with the person or business through a trusted channel. ClearScan will not initiate or open a payment.</p>
-        <button onClick={handleReset} className="ink-action mt-5 rounded-full px-5 py-3 text-sm font-semibold">Scan another QR</button>
+        <button onClick={handleReset} className="ink-action mt-5 rounded-lg px-5 py-3 text-sm font-semibold">Scan another QR</button>
       </section>
     );
   }
 
+  if (scanState === "result" && processError) {
+    return <section className="rounded-2xl border border-rose-200 bg-rose-50 p-6" role="alert">
+      <h2 className="text-xl font-semibold">Analysis unavailable</h2>
+      <p className="mt-2 text-sm">{processError}</p>
+      <button onClick={handleReset} className="ink-action mt-5 rounded-lg px-5 py-3 text-sm font-semibold">Try another scan</button>
+    </section>;
+  }
+
   return (
-    <div className="min-w-0 w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-lg backdrop-blur-sm sm:p-6">
+    <div className="min-w-0 w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm sm:p-6">
       {/* Viewfinder Header */}
       <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-4">
         <div>
@@ -191,12 +238,21 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
                 {cameraError}
               </p>
               <button
-                onClick={handleReset}
+                onClick={() => {
+                  setCameraError("");
+                  setCameraRequested(true);
+                  setCameraAttempt((attempt) => attempt + 1);
+                }}
                 className="mt-2 inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 <span>Retry Camera</span>
               </button>
+            </div>
+          ) : !cameraRequested ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/95 p-6 text-center">
+              <p className="max-w-xs text-sm text-slate-300">Your camera stays off until you choose to scan.</p>
+              <button type="button" onClick={() => setCameraRequested(true)} className="ink-action rounded-lg px-5 py-3 text-sm font-semibold">Start camera</button>
             </div>
           ) : (
             <>
@@ -218,7 +274,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
               <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1.5 text-xs text-slate-300 backdrop-blur-sm">
                 <span className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-                  <span>Camera Ready</span>
+                  <span>{cameraActive ? "Camera Ready" : "Starting camera…"}</span>
                 </span>
                 <span className="text-slate-400">Center QR in frame</span>
               </div>
@@ -243,10 +299,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
       {/* Synthetic test targets */}
       <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-2.5">
         <div className="flex items-center justify-between text-xs text-slate-400">
-          <span className="flex items-center gap-1.5 font-medium text-slate-300">
-            <Sparkles className="h-3.5 w-3.5 text-teal-400" />
-            <span>Try a sample</span>
-          </span>
+          <span className="font-medium text-slate-300">Try a sample</span>
           <span className="text-[11px] text-slate-400">Example scans</span>
         </div>
 
@@ -255,8 +308,8 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
             onClick={() => handleSyntheticScan("https://www.wikipedia.org")}
             className="flex flex-col items-start rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-left transition-colors hover:border-emerald-500/40 hover:bg-slate-900"
           >
-            <span className="text-xs font-semibold text-emerald-400">
-              Ordinary HTTPS link
+              <span className="text-xs font-semibold text-emerald-400">
+              Safe example · HTTPS
             </span>
             <span className="font-mono text-[11px] text-slate-400 truncate w-full mt-0.5">
               wikipedia.org
@@ -264,29 +317,48 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
           </button>
 
           <button
-            onClick={() => handleSyntheticScan("https://amaz0n-security-portal.xyz/verify")}
+            onClick={() => handleSyntheticScan("http://sbi-kyc-update.xyz/verify")}
             className="flex flex-col items-start rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-left transition-colors hover:border-amber-500/40 hover:bg-slate-900"
           >
             <span className="text-xs font-semibold text-amber-400">
-              Typosquatted Brand
+              Synthetic phishing · lookalike
             </span>
             <span className="font-mono text-[11px] text-slate-400 truncate w-full mt-0.5">
-              amaz0n.xyz /verify
+              sbi-kyc-update.xyz /verify
             </span>
           </button>
 
           <button
-            onClick={() => handleSyntheticScan("https://testsafebrowsing.appspot.com/malware")}
+            onClick={() => handleSyntheticScan("upi://pay?pa=demostore%40upi&pn=Demo%20Store&am=100&cu=INR")}
             className="flex flex-col items-start rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-left transition-colors hover:border-rose-500/40 hover:bg-slate-900"
           >
             <span className="text-xs font-semibold text-rose-400">
-              Threat-intel test target
+              UPI payment QR · synthetic
             </span>
-            <span className="font-mono text-[11px] text-slate-400 truncate w-full mt-0.5">
-              Google test URL · API required
+            <span className="text-[11px] text-slate-400 truncate w-full mt-0.5">
+              Demo Store · ₹100 INR · review only
             </span>
           </button>
         </div>
+        {imageError && <p className="text-xs text-rose-400" role="alert">{imageError}</p>}
+        {scanState === "scanning" && (
+          <div className="flex flex-col gap-2 border-t border-slate-800 pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-slate-400">Or choose a QR image from this device. The image is decoded in your browser.</p>
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                aria-label="Choose QR code image"
+                onChange={(event) => void handleImageUpload(event.target.files?.[0])}
+              />
+              <button type="button" onClick={() => imageInputRef.current?.click()} className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 hover:border-teal-500">
+                Upload QR image
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

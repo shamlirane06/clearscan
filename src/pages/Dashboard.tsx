@@ -1,19 +1,19 @@
 import { useState } from "react";
 import {
-  QrCode,
-  ShieldCheck,
-  AlertTriangle,
   ArrowRight,
-  Clock,
-  Terminal,
-  Activity,
-  Shield,
+  CircleCheck,
+  CircleHelp,
+  History,
+  Link2,
+  QrCode,
+  ShieldAlert,
+  ShieldCheck,
+  TriangleAlert,
 } from "lucide-react";
 import DashboardCard from "../components/DashboardCard";
 import ActivityChart from "../components/ActivityChart";
 import URLInput from "../components/URLInput";
 import SecurityReport from "../components/SecurityReport";
-import Scanner from "../components/Scanner";
 import { scanUrl } from "../services/scanService";
 import type { BackendScanResponse, ScanHistoryItem, ScanStats } from "../types/scan";
 
@@ -24,6 +24,57 @@ interface DashboardProps {
   onScanComplete: (response: BackendScanResponse) => void;
 }
 
+function classificationLabel(classification: ScanHistoryItem["riskClassification"]) {
+  switch (classification) {
+    case "LOW_RISK": return "Low risk";
+    case "MODERATE_RISK": return "Needs review";
+    case "HIGH_RISK": return "High risk";
+    case "CRITICAL_RISK": return "Critical risk";
+    case "UNABLE_TO_VERIFY": return "Unable to verify";
+  }
+}
+
+function classificationStyle(classification: ScanHistoryItem["riskClassification"]) {
+  switch (classification) {
+    case "LOW_RISK": return { badge: "bg-emerald-950 text-emerald-200", icon: "text-emerald-400" };
+    case "MODERATE_RISK": return { badge: "bg-amber-950 text-amber-200", icon: "text-amber-300" };
+    case "HIGH_RISK":
+    case "CRITICAL_RISK": return { badge: "bg-rose-950 text-rose-300", icon: "text-rose-300" };
+    case "UNABLE_TO_VERIFY": return { badge: "bg-slate-800 text-slate-300", icon: "text-slate-500" };
+  }
+}
+
+function formatScanTime(timestamp: string) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "Time unavailable";
+
+  const elapsed = Date.now() - date.getTime();
+  if (elapsed < 60_000) return "Just now";
+  if (elapsed < 60 * 60_000) return `${Math.floor(elapsed / 60_000)} min ago`;
+  if (elapsed < 24 * 60 * 60_000) return `${Math.floor(elapsed / (60 * 60_000))} hr ago`;
+  if (elapsed < 7 * 24 * 60 * 60_000) return `${Math.floor(elapsed / (24 * 60 * 60_000))} day${elapsed >= 2 * 24 * 60 * 60_000 ? "s" : ""} ago`;
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date);
+}
+
+function getRecentTrend(
+  history: ScanHistoryItem[],
+  include: (scan: ScanHistoryItem) => boolean,
+) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(today);
+    day.setDate(today.getDate() - (6 - index));
+    const nextDay = new Date(day);
+    nextDay.setDate(day.getDate() + 1);
+    return history.filter((scan) => {
+      const timestamp = new Date(scan.timestamp);
+      return include(scan) && !Number.isNaN(timestamp.getTime()) && timestamp >= day && timestamp < nextDay;
+    }).length;
+  });
+}
+
 export default function Dashboard({
   stats,
   recentScans,
@@ -32,6 +83,9 @@ export default function Dashboard({
 }: DashboardProps) {
   const [loading, setLoading] = useState(false);
   const [quickResult, setQuickResult] = useState<BackendScanResponse | null>(null);
+  const totalTrend = getRecentTrend(recentScans, () => true);
+  const reviewTrend = getRecentTrend(recentScans, (scan) => scan.riskClassification !== "LOW_RISK");
+  const lowRiskTrend = getRecentTrend(recentScans, (scan) => scan.riskClassification === "LOW_RISK");
 
   const handleQuickScan = async (url: string) => {
     setLoading(true);
@@ -45,226 +99,154 @@ export default function Dashboard({
   };
 
   return (
-    <div className="min-w-0 w-full space-y-8">
-      {/* Editorial introduction, using only the product's real scan actions. */}
-      <section className="editorial-hero relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-9 lg:p-11">
-        <div className="relative z-10 grid min-w-0 items-center gap-7 sm:gap-9 lg:grid-cols-[1.05fr_.95fr]">
-          <div className="max-w-2xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-              <span>A safer pause before you open</span>
-            </div>
+    <div className="dashboard-layout min-w-0 w-full space-y-3">
+      <header className="xl:pb-3">
+        <p className="text-base font-semibold text-teal-700">Welcome</p>
+        <h1 className="mt-0 text-3xl font-semibold leading-tight tracking-tight text-slate-100 lg:text-[40px]">
+          Check before you open
+        </h1>
+        <p className="mt-1 text-base leading-6 text-slate-300 sm:text-lg">
+          Scan suspicious links and QR codes to stay safe online.
+        </p>
+      </header>
 
-            <h1 className="text-3xl font-semibold leading-[1] tracking-tight text-white sm:text-5xl lg:text-5xl">
-              <span className="block">Scan. Analyze.</span>
-              <span className="mt-1 block text-teal-500">Stay Secure.</span>
-            </h1>
-
-            <p className="mt-5 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-              Check a QR destination or unfamiliar link for common warning signs before you open it.
-            </p>
-
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => onNavigate("scanner")}
-                className="ink-action inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-              >
-                <QrCode className="h-4 w-4" />
-                <span>Start scanning</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-
-              <button
-                onClick={() => onNavigate("manual")}
-                className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-sm font-semibold text-slate-200 transition-colors hover:border-teal-500/40 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-              >
-                <span>Check a link</span>
-              </button>
+      <section className="grid min-w-0 items-start gap-4 lg:grid-cols-12" aria-label="Start a safety check">
+        <div className="min-w-0 rounded-2xl border border-slate-700 bg-slate-900 p-4 sm:p-5 lg:col-span-8">
+          <div className="mb-4 flex items-center gap-4">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-teal-950 text-teal-700">
+              <Link2 className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold text-slate-100 xl:text-xl">Inspect a destination</h2>
+              <p className="mt-1 text-sm leading-5 text-slate-400 xl:text-base">
+                Paste a URL to analyze its safety or scan a QR code instead.
+              </p>
             </div>
           </div>
-
-          <div className="hero-illustration relative mx-auto grid h-48 w-full max-w-[22rem] place-items-center overflow-hidden rounded-[1.75rem] sm:h-60 lg:h-[18rem]" aria-hidden="true">
-            <span className="hero-orbit hero-orbit-one" />
-            <span className="hero-orbit hero-orbit-two" />
-            <span className="hero-orbit-dot hero-orbit-dot-one" />
-            <span className="hero-orbit-dot hero-orbit-dot-two" />
-            <svg className="hero-shield-art relative z-10 h-40 w-40 sm:h-56 sm:w-56" viewBox="0 0 240 260" fill="none">
-              <defs>
-                <linearGradient id="hero-shield-metal" x1="35" y1="44" x2="207" y2="202" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#77716f" />
-                  <stop offset=".24" stopColor="#383433" />
-                  <stop offset=".53" stopColor="#242323" />
-                  <stop offset=".78" stopColor="#44403f" />
-                  <stop offset="1" stopColor="#171717" />
-                </linearGradient>
-                <linearGradient id="hero-shield-edge" x1="34" y1="36" x2="189" y2="224" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#f4e7dd" />
-                  <stop offset=".45" stopColor="#988b84" />
-                  <stop offset="1" stopColor="#d7c7bd" />
-                </linearGradient>
-                <linearGradient id="hero-lock-metal" x1="79" y1="112" x2="164" y2="181" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#fffaf6" />
-                  <stop offset=".54" stopColor="#cfc5bf" />
-                  <stop offset="1" stopColor="#918985" />
-                </linearGradient>
-                <filter id="hero-shield-shadow" x="4" y="2" width="232" height="258" colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="7" />
-                  <feOffset dy="8" />
-                  <feComponentTransfer><feFuncA type="linear" slope=".28" /></feComponentTransfer>
-                  <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-              </defs>
-              <path d="M120 16 214 51v62c0 63-35 108-94 140-59-32-94-77-94-140V51l94-35Z" fill="url(#hero-shield-metal)" stroke="url(#hero-shield-edge)" strokeWidth="5" filter="url(#hero-shield-shadow)" />
-              <path d="M120 31 199 60v52c0 52-29 91-79 120-50-29-79-68-79-120V60l79-29Z" stroke="#88817e" strokeOpacity=".58" strokeWidth="2" />
-              <path d="M56 61 116 39" stroke="#fffaf6" strokeOpacity=".2" strokeWidth="5" strokeLinecap="round" />
-              <path d="M91 111V93a29 29 0 0 1 58 0v18" stroke="#171717" strokeOpacity=".65" strokeWidth="17" strokeLinecap="round" />
-              <path d="M91 108V92a29 29 0 0 1 58 0v16" stroke="url(#hero-lock-metal)" strokeWidth="13" strokeLinecap="round" />
-              <rect x="75" y="105" width="90" height="74" rx="14" fill="url(#hero-lock-metal)" stroke="#fffaf6" strokeOpacity=".75" strokeWidth="2" />
-              <path d="M84 117a6 6 0 0 1 6-6h60" stroke="#fffaf6" strokeOpacity=".75" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="120" cy="136" r="8" fill="#292624" />
-              <path d="m116 141-4 18h16l-4-18" fill="#292624" />
-            </svg>
-          </div>
+          <URLInput onScan={handleQuickScan} loading={loading} />
         </div>
+
+        <aside className="flex min-w-0 flex-col items-center justify-center rounded-2xl border border-teal-600/15 bg-teal-950 p-4 text-center sm:p-5 xl:pb-7 lg:col-span-4" aria-labelledby="qr-entry-title">
+          <span className="mb-1 flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-teal-700">
+            <QrCode className="h-7 w-7" aria-hidden="true" />
+          </span>
+          <h2 id="qr-entry-title" className="text-lg font-semibold text-slate-100 xl:text-xl">Check a QR code</h2>
+          <p className="mt-1 max-w-xs text-sm leading-5 text-slate-400 xl:text-base">
+            Open the camera scanner or choose a QR image from your device.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate("scanner")}
+            className="mt-2 inline-flex min-h-10 w-full max-w-80 items-center justify-center gap-2 rounded-lg border border-teal-700 bg-slate-900 px-3 py-2 text-sm font-medium text-teal-700 transition-colors hover:bg-teal-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+          >
+            <QrCode className="h-4 w-4" aria-hidden="true" />
+            <span>Open QR scanner</span>
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <p className="mt-1 flex items-center gap-1.5 text-xs leading-4 text-slate-500">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+            Your camera stays off until you choose to scan.
+          </p>
+        </aside>
       </section>
 
-      {/* Main Focus: Dual Inspection Workstation */}
-      <div className="grid min-w-0 gap-6 lg:grid-cols-12 items-start">
-        {/* Left Column: Command Bar Inspector & Results (7 cols) */}
-        <div className="min-w-0 lg:col-span-7 space-y-6">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
-              <div className="flex items-center gap-2.5">
-                <Terminal className="h-4 w-4 text-teal-400" />
-              <h2 className="text-sm font-semibold text-slate-100 sm:text-base">
-                  Check a link
-                </h2>
-              </div>
-              <span className="text-xs text-slate-400">Private network checks on</span>
-            </div>
+      {loading && (
+        <p className="-mt-2 text-sm text-slate-400" role="status" aria-live="polite">
+          Checking the link…
+        </p>
+      )}
 
-            <URLInput onScan={handleQuickScan} loading={loading} />
-          </div>
+      {quickResult && (
+        <SecurityReport report={quickResult} onReset={() => setQuickResult(null)} />
+      )}
 
-          {quickResult && (
-            <SecurityReport report={quickResult} onReset={() => setQuickResult(null)} />
-          )}
-
-          {/* Recent Audit Feed */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-slate-400" />
-                <h2 className="text-sm font-semibold text-slate-200">
-                  Recent scans
-                </h2>
-              </div>
-              <button
-                onClick={() => onNavigate("history")}
-                className="text-xs font-medium text-teal-400 hover:text-teal-300 flex items-center gap-1 transition-colors"
-              >
-                <span>View history</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {recentScans.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-400">
-                Your recent checks will appear here. Analyze a URL or QR code to begin.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {recentScans.slice(0, 4).map((scan) => {
-                  const isCritical = scan.riskScore >= 75 || scan.riskClassification === "CRITICAL_RISK";
-                  const isHigh = scan.riskScore >= 50 && scan.riskScore < 75;
-                  const isModerate = scan.riskScore >= 25 && scan.riskScore < 50;
-
-                  return (
-                    <div
-                      key={scan.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 text-xs transition-colors hover:border-slate-700"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-slate-200 truncate">
-                            {scan.normalizedHostname || scan.url}
-                          </span>
-                          <span className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.2 text-[10px] uppercase font-semibold text-slate-400">
-                            {scan.source}
-                          </span>
-                        </div>
-                        <p className="font-mono text-[11px] text-slate-400 truncate pt-1">{scan.url}</p>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className={`rounded-md border px-2.5 py-0.5 text-[11px] font-semibold ${
-                            isCritical
-                              ? "border-rose-500/30 bg-rose-500/10 text-rose-300"
-                              : isHigh
-                              ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                              : isModerate
-                              ? "border-yellow-500/20 bg-yellow-500/10 text-yellow-300"
-                              : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-                          }`}
-                        >
-                          Score: {scan.riskScore >= 0 ? scan.riskScore : "—"}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Optical QR Scanner (5 cols) */}
-        <div className="min-w-0 lg:col-span-5 space-y-6">
-          <Scanner onScanComplete={onScanComplete} />
-
-          {/* Zero-Trust Security Advisory */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-teal-300">
-              <Shield className="h-4 w-4" />
-              <span>Safety reminder</span>
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              A QR sticker can be placed over a legitimate code on a parking meter, counter, or flyer. Check the destination before opening it. You never need to enter a PIN or scan a code to <em>receive</em> money.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Real local totals mirror the reference metrics without implying resolved issues. */}
-      <div className="grid grid-cols-1 divide-y divide-slate-800 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <section className="grid min-w-0 gap-4 md:grid-cols-3" aria-label="Local scan totals">
         <DashboardCard
           title="Total scans"
           value={stats.total}
-          description="Links and QR codes checked in this browser."
-          icon={Activity}
-          badge="This browser"
-          badgeColor="bg-slate-800 text-slate-300 border-slate-700"
+          description="Checks run in this browser."
+          icon={Link2}
+          trend={totalTrend}
         />
         <DashboardCard
           title="Needs review"
           value={stats.moderateRisk + stats.highRisk + stats.criticalRisk + stats.unableToVerify}
-          description="Scans with warning signs or incomplete checks."
-          icon={AlertTriangle}
-          badge="Review"
-          badgeColor="bg-amber-500/10 text-amber-300 border-amber-500/20"
+          description="Warnings or incomplete checks."
+          icon={ShieldAlert}
+          tone="warning"
+          trend={reviewTrend}
         />
         <DashboardCard
-          title="Low risk"
+          title="Low-risk results"
           value={stats.lowRisk}
-          description="No configured warning patterns found."
+          description="No warning patterns found; use care."
           icon={ShieldCheck}
-          badge="Context only"
-          badgeColor="bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+          trend={lowRiskTrend}
         />
-      </div>
+      </section>
 
-      <ActivityChart history={recentScans} />
+      <div className="dashboard-lower-grid grid min-w-0 items-stretch gap-3 lg:grid-cols-12">
+        <div className="min-w-0 lg:col-span-7">
+          <ActivityChart history={recentScans} />
+        </div>
+        <section className="min-w-0 rounded-2xl border border-slate-700 bg-slate-900 p-4 xl:min-h-[228px] lg:col-span-5" aria-labelledby="recent-scans-title">
+          <div className="flex items-center justify-between gap-3 pb-1">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-950 text-teal-700">
+                <History className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 id="recent-scans-title" className="text-lg font-semibold text-slate-100">Recent scans</h2>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate("history")}
+              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-teal-700 transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+            >
+              <span>View all</span>
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          {recentScans.length === 0 ? (
+            <div className="flex min-h-36 items-center gap-3 py-5" role="status">
+              <History className="h-[18px] w-[18px] shrink-0 text-slate-500" aria-hidden="true" />
+              <div>
+                <p className="text-sm font-medium text-slate-300">No recent scans</p>
+                <p className="mt-0.5 text-sm text-slate-400">Check a link or QR code to see it here.</p>
+              </div>
+            </div>
+          ) : (
+            <ul aria-label="Latest scan results" className="divide-y divide-slate-700">
+              {recentScans.slice(0, 3).map((scan) => {
+                const appearance = classificationStyle(scan.riskClassification);
+                const StatusIcon = scan.riskClassification === "LOW_RISK"
+                  ? CircleCheck
+                  : scan.riskClassification === "UNABLE_TO_VERIFY" ? CircleHelp : TriangleAlert;
+                const sourceLabel = scan.source === "qr" ? "QR code" : scan.source === "message" ? "Message" : "Link";
+
+                return (
+                  <li key={scan.id} className="flex min-w-0 items-center gap-3 py-2 xl:py-1.5">
+                    <StatusIcon className={`h-[18px] w-[18px] shrink-0 ${appearance.icon}`} aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium leading-5 text-slate-100 xl:text-base" title={scan.url}>
+                        {scan.url}
+                      </p>
+                      <p className="truncate text-xs leading-4 text-slate-400 xl:text-sm" title={scan.url}>
+                        {sourceLabel} · {formatScanTime(scan.timestamp)}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${appearance.badge}`}>
+                      {classificationLabel(scan.riskClassification)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

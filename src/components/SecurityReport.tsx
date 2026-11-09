@@ -48,7 +48,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
   const isUnable = report.riskClassification === "UNABLE_TO_VERIFY";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 shadow-lg">
+    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
       {/* Top Dossier Header */}
       <div
         className={`border-b p-6 sm:p-7 transition-colors ${
@@ -75,8 +75,8 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
                   <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 )}
               </span>
-              <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
-                Destination Security Dossier &bull; Ref #{report.timestamp ? report.timestamp.slice(-6) : "SCAN"}
+              <span className="text-xs font-medium text-slate-400">
+                Scan report · Ref #{report.timestamp ? report.timestamp.slice(-6) : "SCAN"}
               </span>
             </div>
 
@@ -101,7 +101,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="flex items-center gap-1.5 font-medium text-slate-300">
               <Globe className="h-4 w-4 text-slate-400" />
-              Target Destination URI
+              Destination URL
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -208,7 +208,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
         >
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
-            <span>Recommended Mitigation Action</span>
+            <span>Recommended next step</span>
           </h3>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
             {report.recommendedAction ||
@@ -219,8 +219,8 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
         {/* Active Security Warnings */}
         {report.warnings && report.warnings.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-              Active Security Warnings ({report.warnings.length})
+            <h3 className="text-sm font-medium text-amber-300">
+              Security warnings ({report.warnings.length})
             </h3>
             <div className="space-y-2">
               {report.warnings.map((warn, index) => (
@@ -245,7 +245,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
             >
               <div>
                 <h3 className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">
-                  Multi-Layer Inspection Telemetry ({report.securityChecks.length} Checks)
+                  Security checks ({report.securityChecks.length})
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Granular evaluation logs across protocol, reputation, typosquatting, and threat feeds.

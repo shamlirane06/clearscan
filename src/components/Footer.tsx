@@ -1,64 +1,70 @@
-import { ShieldCheck, ExternalLink, Terminal, Lock } from "lucide-react";
+import { ExternalLink, ShieldCheck } from "lucide-react";
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
+  privacyOpen?: boolean;
+  onPrivacyOpenChange?: (open: boolean) => void;
 }
 
-export default function Footer({ onNavigate }: FooterProps) {
+export default function Footer({ onNavigate, privacyOpen = false, onPrivacyOpenChange }: FooterProps) {
   return (
-    <footer className="border-t border-slate-800/80 bg-slate-950 px-4 py-8 text-slate-400 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_1fr]">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/30">
-              <ShieldCheck className="h-4 w-4" />
-            </span>
-            <span className="text-sm font-semibold text-white tracking-tight">
-              ClearScan &bull; Scan before you trust
-            </span>
-          </div>
-          <p className="max-w-lg text-xs leading-relaxed text-slate-400">
-            Check QR destinations and unfamiliar links for warning signs before you open them.
-          </p>
-          <div className="flex items-center gap-4 pt-1 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5 text-teal-400" />
-              <span>History stays in this browser</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Terminal className="h-3.5 w-3.5 text-slate-400" />
-              <span>Spring Boot + React Engine</span>
-            </span>
-          </div>
-          {onNavigate && (
-            <button
-              type="button"
-              onClick={() => onNavigate("about")}
-              className="pt-1 text-xs font-medium text-slate-400 underline decoration-slate-600 underline-offset-4 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-            >
-              About ClearScan
-            </button>
-          )}
+    <footer className="relative z-10 min-h-16 border-t border-slate-700 bg-slate-900 px-4 py-3 sm:px-6 lg:px-7">
+      <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-950 text-teal-700">
+            <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+          </span>
+          <span className="text-sm font-semibold text-slate-100">ClearScan</span>
+          <span className="h-4 border-l border-slate-700" aria-hidden="true" />
+          <span className="truncate text-sm text-slate-400">Scan safely. Browse confidently.</span>
         </div>
 
-        <div className="space-y-3 text-xs leading-relaxed text-slate-400">
-          <p>
-            <strong className="text-slate-300">Security Notice: </strong>
-            Never disclose OTPs, PINs, or UPI passwords to receive money.
-            Scan history stores only the destination origin locally. The full URL is sent to the ClearScan backend; when configured, Google Safe Browsing also receives it for a threat lookup. ClearScan never opens URLs or starts payments.
-          </p>
-          <p className="flex items-center gap-1.5 pt-1">
-            <span>In an emergency, report cyber fraud immediately to</span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <details
+            id="privacy-security"
+            open={privacyOpen}
+            onToggle={(event) => onPrivacyOpenChange?.(event.currentTarget.open)}
+            className="group relative"
+          >
+            <summary className="cursor-pointer list-none font-medium text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500">
+              Privacy &amp; security
+            </summary>
+            <div className="absolute bottom-full right-0 z-20 mb-2 w-[min(24rem,calc(100vw-2rem))] rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm leading-5 text-slate-300 shadow-sm">
+              <p className="font-semibold text-slate-100">Security notice</p>
+              <p className="mt-2">
+                Never disclose OTPs, PINs, or UPI passwords to receive money. Scan history stores only the destination origin in this browser. The full URL is sent to the ClearScan backend and, when configured, Google Safe Browsing for a threat lookup. ClearScan never opens URLs or starts payments.
+              </p>
+            </div>
+          </details>
+
+          <span className="inline-flex items-center gap-1.5 text-slate-400">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+            <span>Report suspicious content:</span>
             <a
               href="https://cybercrime.gov.in"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-teal-400 hover:underline font-medium"
+              className="inline-flex items-center gap-1 font-medium text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             >
-              <span>cybercrime.gov.in (Helpline: 1930)</span>
-              <ExternalLink className="h-3 w-3" />
+              <span>cybercrime.gov.in</span>
+              <ExternalLink className="h-3 w-3" aria-hidden="true" />
             </a>
-          </p>
+          </span>
+
+          {onNavigate && (
+            <>
+              <span className="hidden h-4 border-l border-slate-700 sm:block" aria-hidden="true" />
+              <span className="text-slate-400">Need help? Visit our</span>
+              <button
+                type="button"
+                onClick={() => onNavigate("learn")}
+                className="-ml-2 inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 font-medium text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+              >
+                <span>Help section</span>
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </footer>

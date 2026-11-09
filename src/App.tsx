@@ -12,6 +12,7 @@ import type { BackendScanResponse } from "./types/scan";
 
 export default function App() {
   const [activePage, setActivePage] = useState<string>("dashboard");
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const { history, addScan, removeScan, clearHistory, stats } = useScanHistory();
 
   useEffect(() => {
@@ -23,23 +24,22 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-teal-500/20 selection:text-teal-200">
+    <div className={`cs-app-frame flex min-h-screen flex-col bg-slate-950 text-slate-100 antialiased selection:bg-teal-500/20 selection:text-teal-200 ${activePage === "dashboard" ? "cs-dashboard-frame" : ""}`}>
       <a className="skip-link" href="#content">Skip to content</a>
-      <Navbar
-        key={activePage}
-        activePage={activePage}
-        onNavigate={setActivePage}
-        historyCount={history.length}
-      />
-
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1">
+      <div className="flex min-h-0 flex-1">
         <Sidebar
           activePage={activePage}
           onNavigate={setActivePage}
           historyCount={history.length}
         />
         <div className="flex min-w-0 flex-1 flex-col">
-          <main id="content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
+          <Navbar
+            key={activePage}
+            activePage={activePage}
+            onNavigate={setActivePage}
+            historyCount={history.length}
+          />
+          <main id="content" tabIndex={-1} className="mx-auto min-h-0 w-full max-w-none flex-1 px-4 py-4 sm:px-6 lg:px-5 lg:pb-8 lg:pt-4 xl:pb-5 xl:pl-8 xl:pr-3">
             {activePage === "dashboard" && (
               <Dashboard
                 stats={stats}
@@ -70,10 +70,9 @@ export default function App() {
 
             {activePage === "about" && <AboutPage />}
           </main>
-
-          <Footer onNavigate={setActivePage} />
         </div>
       </div>
+      <Footer onNavigate={setActivePage} privacyOpen={privacyOpen} onPrivacyOpenChange={setPrivacyOpen} />
     </div>
   );
 }
