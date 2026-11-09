@@ -1,20 +1,20 @@
 import { useState } from "react";
 import {
-  ShieldCheck,
-  ShieldAlert,
-  AlertTriangle,
-  Globe,
-  Clock,
-  CheckCircle2,
-  Copy,
-  Check,
-  RotateCcw,
+  WarningTriangle,
+  CheckCircle,
+  CheckMark,
   ChevronDown,
   ChevronUp,
-  Cpu,
-  Lock,
-  FileText,
-} from "lucide-react";
+  CopyMark,
+  GlobeMark,
+  LockMark,
+  Processor,
+  ReportDocument,
+  RotateBack,
+  ScanHistory,
+  ShieldCheck,
+  WarningShield,
+} from "./icons/ClearScanIcons";
 import type { BackendScanResponse } from "../types/scan";
 import RiskMeter from "./RiskMeter";
 import SecurityCheckItem from "./SecurityCheckItem";
@@ -68,9 +68,9 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-800 text-slate-300">
                 {isCritical || isHigh ? (
-                  <ShieldAlert className="h-4 w-4 text-rose-400" />
+                  <WarningShield className="h-4 w-4 text-rose-400" />
                 ) : isModerate ? (
-                  <AlertTriangle className="h-4 w-4 text-yellow-400" />
+                  <WarningTriangle className="h-4 w-4 text-yellow-400" />
                 ) : (
                   <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 )}
@@ -100,7 +100,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
         <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="flex items-center gap-1.5 font-medium text-slate-300">
-              <Globe className="h-4 w-4 text-slate-400" />
+              <GlobeMark className="h-4 w-4 text-slate-400" />
               Destination URL
             </span>
             <div className="flex items-center gap-2">
@@ -110,12 +110,12 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
               >
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-teal-400" />
+                    <CheckMark className="h-3.5 w-3.5 text-teal-400" />
                     <span className="text-teal-400">Copied</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5" />
+                    <CopyMark className="h-3.5 w-3.5" />
                     <span>Copy URI</span>
                   </>
                 )}
@@ -128,12 +128,12 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
               >
                 {reportExported ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-teal-400" />
+                    <CheckMark className="h-3.5 w-3.5 text-teal-400" />
                     <span className="text-teal-400">JSON Copied</span>
                   </>
                 ) : (
                   <>
-                    <FileText className="h-3.5 w-3.5" />
+                    <ReportDocument className="h-3.5 w-3.5" />
                     <span>Export JSON</span>
                   </>
                 )}
@@ -148,7 +148,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
         {/* Telemetry Status Indicators */}
         <div className="flex flex-wrap items-center gap-2.5 text-xs">
           <span className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-300">
-            <Cpu className="h-3.5 w-3.5 text-teal-400" />
+            <Processor className="h-3.5 w-3.5 text-teal-400" />
             <span>{report.analysisSource === "LOCAL_FALLBACK" ? "Local heuristic analysis" : "Backend heuristic analysis"}</span>
           </span>
 
@@ -176,12 +176,12 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
           </span>
 
           <span className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-400">
-            <Lock className="h-3.5 w-3.5 text-slate-400" />
+            <LockMark className="h-3.5 w-3.5 text-slate-400" />
             <span>Destination URL is analyzed as text; no redirects are followed</span>
           </span>
 
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-400 font-mono text-xs">
-            <Clock className="h-3.5 w-3.5 text-slate-400" />
+            <ScanHistory className="h-3.5 w-3.5 text-slate-400" />
             <span>
               {new Date(report.timestamp).toLocaleTimeString([], {
                 hour: "2-digit",
@@ -207,7 +207,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
           }`}
         >
           <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <CheckCircle className="h-4 w-4 shrink-0" />
             <span>Recommended next step</span>
           </h3>
           <p className="mt-2 text-sm leading-relaxed text-slate-300">
@@ -228,7 +228,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
                   key={index}
                   className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-950/15 p-3.5 text-sm text-amber-200 leading-relaxed"
                 >
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                  <WarningTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                   <span>{warn}</span>
                 </div>
               ))}
@@ -281,7 +281,7 @@ export default function SecurityReport({ report, onReset }: SecurityReportProps)
               onClick={onReset}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 transition-colors hover:bg-slate-700 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
+              <RotateBack className="h-3.5 w-3.5" />
               <span>Scan Another Destination</span>
             </button>
           )}

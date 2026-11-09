@@ -1,15 +1,5 @@
 import { useState } from "react";
-import {
-  ArrowRight,
-  CircleCheck,
-  CircleHelp,
-  History,
-  Link2,
-  QrCode,
-  ShieldAlert,
-  ShieldCheck,
-  TriangleAlert,
-} from "lucide-react";
+import { ArrowRight, Camera, CheckCircle, HelpCircle, LinkChain, QrCodeMark, ScanHistory, ShieldCheck, WarningShield, WarningTriangle } from "../components/icons/ClearScanIcons";
 import DashboardCard from "../components/DashboardCard";
 import ActivityChart from "../components/ActivityChart";
 import URLInput from "../components/URLInput";
@@ -114,7 +104,7 @@ export default function Dashboard({
         <div className="min-w-0 rounded-2xl border border-slate-700 bg-slate-900 p-4 sm:p-5 lg:col-span-8">
           <div className="mb-4 flex items-center gap-4">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-teal-950 text-teal-700">
-              <Link2 className="h-6 w-6" aria-hidden="true" />
+              <LinkChain className="h-6 w-6" aria-hidden="true" />
             </span>
             <div className="min-w-0">
               <h2 className="text-lg font-semibold text-slate-100 xl:text-xl">Inspect a destination</h2>
@@ -128,7 +118,7 @@ export default function Dashboard({
 
         <aside className="flex min-w-0 flex-col items-center justify-center rounded-2xl border border-teal-600/15 bg-teal-950 p-4 text-center sm:p-5 xl:pb-7 lg:col-span-4" aria-labelledby="qr-entry-title">
           <span className="mb-1 flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-teal-700">
-            <QrCode className="h-7 w-7" aria-hidden="true" />
+            <QrCodeMark className="h-7 w-7" aria-hidden="true" />
           </span>
           <h2 id="qr-entry-title" className="text-lg font-semibold text-slate-100 xl:text-xl">Check a QR code</h2>
           <p className="mt-1 max-w-xs text-sm leading-5 text-slate-400 xl:text-base">
@@ -139,25 +129,27 @@ export default function Dashboard({
             onClick={() => onNavigate("scanner")}
             className="mt-2 inline-flex min-h-10 w-full max-w-80 items-center justify-center gap-2 rounded-lg border border-teal-700 bg-slate-900 px-3 py-2 text-sm font-medium text-teal-700 transition-colors hover:bg-teal-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
           >
-            <QrCode className="h-4 w-4" aria-hidden="true" />
+            <Camera className="h-4 w-4" aria-hidden="true" />
             <span>Open QR scanner</span>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
           <p className="mt-1 flex items-center gap-1.5 text-xs leading-4 text-slate-500">
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-teal-700" aria-hidden="true" />
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-teal-700" aria-hidden="true" />
             Your camera stays off until you choose to scan.
           </p>
         </aside>
       </section>
 
       {loading && (
-        <p className="-mt-2 text-sm text-slate-400" role="status" aria-live="polite">
+        <p className="dashboard-feedback -mt-2 text-sm text-slate-400" role="status" aria-live="polite">
           Checking the link…
         </p>
       )}
 
       {quickResult && (
-        <SecurityReport report={quickResult} onReset={() => setQuickResult(null)} />
+        <div className="dashboard-feedback min-w-0">
+          <SecurityReport report={quickResult} onReset={() => setQuickResult(null)} />
+        </div>
       )}
 
       <section className="grid min-w-0 gap-4 md:grid-cols-3" aria-label="Local scan totals">
@@ -165,14 +157,14 @@ export default function Dashboard({
           title="Total scans"
           value={stats.total}
           description="Checks run in this browser."
-          icon={Link2}
+          icon={LinkChain}
           trend={totalTrend}
         />
         <DashboardCard
           title="Needs review"
           value={stats.moderateRisk + stats.highRisk + stats.criticalRisk + stats.unableToVerify}
           description="Warnings or incomplete checks."
-          icon={ShieldAlert}
+          icon={WarningShield}
           tone="warning"
           trend={reviewTrend}
         />
@@ -189,11 +181,11 @@ export default function Dashboard({
         <div className="min-w-0 lg:col-span-7">
           <ActivityChart history={recentScans} />
         </div>
-        <section className="min-w-0 rounded-2xl border border-slate-700 bg-slate-900 p-4 xl:min-h-[228px] lg:col-span-5" aria-labelledby="recent-scans-title">
+        <section className="min-w-0 rounded-2xl border border-slate-700 bg-slate-900 p-4 lg:col-span-5" aria-labelledby="recent-scans-title">
           <div className="flex items-center justify-between gap-3 pb-1">
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-950 text-teal-700">
-                <History className="h-4 w-4" aria-hidden="true" />
+                <ScanHistory className="h-4 w-4" aria-hidden="true" />
               </span>
               <div>
                 <h2 id="recent-scans-title" className="text-lg font-semibold text-slate-100">Recent scans</h2>
@@ -210,8 +202,8 @@ export default function Dashboard({
           </div>
 
           {recentScans.length === 0 ? (
-            <div className="flex min-h-36 items-center gap-3 py-5" role="status">
-              <History className="h-[18px] w-[18px] shrink-0 text-slate-500" aria-hidden="true" />
+            <div className="flex min-h-20 items-center gap-3 py-3" role="status">
+              <ScanHistory className="h-[18px] w-[18px] shrink-0 text-slate-500" aria-hidden="true" />
               <div>
                 <p className="text-sm font-medium text-slate-300">No recent scans</p>
                 <p className="mt-0.5 text-sm text-slate-400">Check a link or QR code to see it here.</p>
@@ -222,8 +214,8 @@ export default function Dashboard({
               {recentScans.slice(0, 3).map((scan) => {
                 const appearance = classificationStyle(scan.riskClassification);
                 const StatusIcon = scan.riskClassification === "LOW_RISK"
-                  ? CircleCheck
-                  : scan.riskClassification === "UNABLE_TO_VERIFY" ? CircleHelp : TriangleAlert;
+                  ? CheckCircle
+                  : scan.riskClassification === "UNABLE_TO_VERIFY" ? HelpCircle : WarningTriangle;
                 const sourceLabel = scan.source === "qr" ? "QR code" : scan.source === "message" ? "Message" : "Link";
 
                 return (

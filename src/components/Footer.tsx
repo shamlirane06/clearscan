@@ -1,4 +1,4 @@
-import { ExternalLink, ShieldCheck } from "lucide-react";
+import { ExternalLink, ShieldCheck } from "./icons/ClearScanIcons";
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
@@ -8,7 +8,7 @@ interface FooterProps {
 
 export default function Footer({ onNavigate, privacyOpen = false, onPrivacyOpenChange }: FooterProps) {
   return (
-    <footer className="relative z-10 min-h-16 border-t border-slate-700 bg-slate-900 px-4 py-3 sm:px-6 lg:px-7">
+    <footer className="cs-dashboard-footer relative z-10 min-h-16 border-t border-slate-700 bg-slate-900 px-4 py-3 sm:px-6 lg:px-7">
       <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-950 text-teal-700">
@@ -24,7 +24,7 @@ export default function Footer({ onNavigate, privacyOpen = false, onPrivacyOpenC
             id="privacy-security"
             open={privacyOpen}
             onToggle={(event) => onPrivacyOpenChange?.(event.currentTarget.open)}
-            className="group relative"
+            className="cs-footer-privacy group relative"
           >
             <summary className="cursor-pointer list-none font-medium text-teal-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500">
               Privacy &amp; security

@@ -1,4 +1,4 @@
-import { BarChart3, ChevronDown, Clock3 } from "lucide-react";
+import { BarChart, ChevronDown, ScanHistory } from "./icons/ClearScanIcons";
 import { useState } from "react";
 import type { ScanHistoryItem } from "../types/scan";
 
@@ -59,7 +59,7 @@ export default function ActivityChart({ history }: ActivityChartProps) {
       <div className="mb-2 flex items-start justify-between gap-4">
         <div className="flex items-start gap-2.5">
           <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-950 text-teal-700">
-            <BarChart3 className="h-5 w-5" aria-hidden="true" />
+            <BarChart className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
             <h2 id="activity-title" className="text-xl font-semibold text-slate-100">Scan activity</h2>
@@ -83,8 +83,8 @@ export default function ActivityChart({ history }: ActivityChartProps) {
       </div>
 
       {weekTotal === 0 ? (
-        <div className="flex min-h-24 items-center justify-center gap-3 border-t border-slate-700 px-1 py-5 text-sm text-slate-400" role="status">
-          <Clock3 className="h-[18px] w-[18px] shrink-0 text-slate-500" aria-hidden="true" />
+        <div className="flex min-h-16 items-center justify-center gap-3 border-t border-slate-700 px-1 py-3 text-sm text-slate-400" role="status">
+          <ScanHistory className="h-[18px] w-[18px] shrink-0 text-slate-500" aria-hidden="true" />
           <p>No scans saved in this browser during the last {dayCount} days.</p>
         </div>
       ) : (

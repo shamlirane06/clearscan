@@ -1,16 +1,5 @@
 import { useState } from "react";
-import {
-  ShieldCheck,
-  Menu,
-  X,
-  LayoutDashboard,
-  QrCode,
-  Link2,
-  History,
-  GraduationCap,
-  Info,
-  FileText,
-} from "lucide-react";
+import { Close, DashboardGrid, HelpCircle, InfoCircle, LinkChain, MenuBars, QrCodeMark, ReportDocument, ScanHistory, ShieldLogo } from "./icons/ClearScanIcons";
 
 interface NavbarProps {
   activePage: string;
@@ -26,18 +15,18 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "scanner", label: "QR scan", icon: QrCode },
-    { id: "manual", label: "Check a URL", icon: Link2 },
+    { id: "dashboard", label: "Dashboard", icon: DashboardGrid },
+    { id: "scanner", label: "QR scan", icon: QrCodeMark },
+    { id: "manual", label: "Check a URL", icon: LinkChain },
     {
       id: "history",
       label: "History",
-      icon: History,
+      icon: ScanHistory,
       badge: historyCount > 0 ? historyCount : undefined,
     },
-    { id: "reports", label: "Reports", icon: FileText },
-    { id: "learn", label: "Help", icon: GraduationCap },
-    { id: "about", label: "About", icon: Info },
+    { id: "reports", label: "Reports", icon: ReportDocument },
+    { id: "learn", label: "Help", icon: HelpCircle },
+    { id: "about", label: "About", icon: InfoCircle },
   ];
 
   const handleNavClick = (pageId: string) => {
@@ -46,23 +35,23 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-950">
+    <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-900">
       <div className="mx-auto flex h-14 w-full max-w-none items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 xl:h-[84px] xl:pl-8 xl:pr-7">
         <div className="flex min-w-0 items-center">
           <button
             type="button"
             onClick={() => handleNavClick("dashboard")}
-            className="flex items-center gap-2.5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:hidden"
+            className="navbar-brand flex items-center gap-2.5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:hidden"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-950 text-teal-700">
-              <ShieldCheck className="h-[18px] w-[18px]" aria-hidden="true" />
+              <ShieldLogo className="h-[18px] w-[18px]" aria-hidden="true" />
             </span>
             <span className="leading-tight">
               <span className="block text-sm font-semibold text-slate-100">ClearScan</span>
               <span className="block text-xs text-slate-400">QR &amp; link safety</span>
             </span>
           </button>
-        <div className="hidden items-center gap-2 text-sm text-slate-400 lg:flex">
+        <div className="navbar-status hidden items-center gap-2 text-sm text-slate-400 lg:flex">
             <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
           <span className="font-medium text-slate-300">Local checks ready</span>
           </div>
@@ -75,18 +64,18 @@ export default function Navbar({
             aria-label="Scan QR code"
             className="ink-action inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 sm:px-3.5 xl:min-h-11 xl:px-4 xl:text-sm"
           >
-            <QrCode className="h-4 w-4" aria-hidden="true" />
+            <QrCodeMark className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Scan QR Code</span>
           </button>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-controls="mobile-navigation"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:hidden"
+            className="navbar-mobile-menu inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:hidden"
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
           >
-            {mobileMenuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
+            {mobileMenuOpen ? <Close className="h-4 w-4" aria-hidden="true" /> : <MenuBars className="h-4 w-4" aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -129,7 +118,7 @@ export default function Navbar({
                 onClick={() => handleNavClick("scanner")}
                 className="ink-action flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
               >
-                <QrCode className="h-4 w-4" aria-hidden="true" />
+                <QrCodeMark className="h-4 w-4" aria-hidden="true" />
                 <span>Launch Camera Scanner</span>
               </button>
             </div>

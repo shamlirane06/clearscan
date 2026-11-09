@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle, AlertOctagon, Info, ShieldAlert } from "lucide-react";
+import { AlertOctagon, CheckCircle, HelpCircle, WarningShield, WarningTriangle } from "./icons/ClearScanIcons";
 import type { SecurityCheckResult } from "../types/scan";
 
 interface SecurityCheckItemProps {
@@ -44,13 +44,13 @@ export default function SecurityCheckItem({ check }: SecurityCheckItemProps) {
             {isCritical ? (
               <AlertOctagon className="h-5 w-5 text-rose-400" />
             ) : isHigh ? (
-              <ShieldAlert className="h-5 w-5 text-amber-400" />
+              <WarningShield className="h-5 w-5 text-amber-400" />
             ) : isWarning ? (
-              <AlertTriangle className="h-5 w-5 text-yellow-400" />
+              <WarningTriangle className="h-5 w-5 text-yellow-400" />
             ) : check.riskLevel === "INFO" ? (
-              <Info className="h-5 w-5 text-slate-400" />
+              <HelpCircle className="h-5 w-5 text-slate-400" />
             ) : (
-              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+              <CheckCircle className="h-5 w-5 text-emerald-400" />
             )}
           </div>
           <div className="space-y-1">
