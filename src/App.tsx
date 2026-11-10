@@ -5,7 +5,8 @@ import Footer from "./components/Footer";
 import Dashboard from "./pages/Dashboard";
 import ScannerPage from "./pages/ScannerPage";
 import HistoryPage from "./pages/HistoryPage";
-import LearnPage from "./pages/LearnPage";
+import ReportsPage from "./pages/ReportsPage";
+import HelpPage from "./pages/HelpPage";
 import AboutPage from "./pages/AboutPage";
 import { useScanHistory } from "./hooks/useScanHistory";
 import type { BackendScanResponse } from "./types/scan";
@@ -24,21 +25,27 @@ export default function App() {
   };
 
   return (
-    <div className={`cs-app-frame flex min-h-screen flex-col bg-slate-950 text-slate-100 antialiased selection:bg-teal-500/20 selection:text-teal-200 ${activePage === "dashboard" ? "cs-dashboard-frame" : ""}`}>
+    <div className={`cs-app-frame flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-teal-500/20 selection:text-teal-200 ${activePage === "dashboard" ? "lg:h-screen lg:max-h-screen lg:overflow-hidden min-h-screen" : "min-h-screen"}`}>
       <a className="skip-link" href="#content">Skip to content</a>
       <div className="flex min-h-0 flex-1">
         <Sidebar
           activePage={activePage}
           onNavigate={setActivePage}
         />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className={`flex min-w-0 flex-1 flex-col ${activePage === "dashboard" ? "lg:h-full lg:overflow-hidden" : ""}`}>
           <Navbar
             key={activePage}
             activePage={activePage}
             onNavigate={setActivePage}
             historyCount={history.length}
           />
-          <main id="content" tabIndex={-1} className="mx-auto min-h-0 w-full max-w-none flex-1 px-4 py-4 sm:px-6 lg:px-5 lg:pb-8 lg:pt-4 xl:pb-5 xl:pl-8 xl:pr-3">
+          <main id="content" tabIndex={-1} className={`mx-auto min-h-0 w-full max-w-none flex-1 px-4 py-3 sm:px-6 ${
+            activePage === "dashboard"
+              ? "lg:px-7 lg:py-2 xl:py-2.5 lg:h-full lg:flex lg:flex-col lg:justify-between lg:overflow-hidden"
+              : activePage === "history" || activePage === "reports" || activePage === "scanner" || activePage === "manual" || activePage === "learn" || activePage === "help"
+                ? "lg:px-8 lg:py-6"
+                : "lg:px-5 lg:pb-8 lg:pt-4 xl:pb-5 xl:pl-8 xl:pr-3"
+          }`}>
             {activePage === "dashboard" && (
               <Dashboard
                 stats={stats}
@@ -56,16 +63,26 @@ export default function App() {
               <ScannerPage onScanComplete={handleScanComplete} defaultTab="url" />
             )}
 
-            {(activePage === "history" || activePage === "reports") && (
+            {activePage === "history" && (
               <HistoryPage
                 history={history}
                 onClearHistory={clearHistory}
                 onRemoveItem={removeScan}
-                reportView={activePage === "reports"}
+                reportView={false}
+                onNavigate={setActivePage}
               />
             )}
 
-            {activePage === "learn" && <LearnPage />}
+            {activePage === "reports" && (
+              <ReportsPage
+                history={history}
+                onNavigate={setActivePage}
+              />
+            )}
+
+            {(activePage === "learn" || activePage === "help") && (
+              <HelpPage onNavigate={setActivePage} />
+            )}
 
             {activePage === "about" && <AboutPage />}
           </main>

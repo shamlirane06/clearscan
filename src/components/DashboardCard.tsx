@@ -8,40 +8,80 @@ interface DashboardCardProps {
   description: string;
   icon: DashboardIcon;
   tone?: "brand" | "warning";
-  trend: number[];
+  trend?: number[];
 }
 
-export default function DashboardCard({ title, value, description, icon: Icon, tone = "brand", trend }: DashboardCardProps) {
-  const iconStyle = tone === "warning"
-    ? "bg-amber-950 text-amber-300"
-    : "bg-teal-950 text-teal-700";
-  const maximum = Math.max(1, ...trend);
-  const points = trend.map((value, index) => ({
-    x: 3 + (index * 106) / Math.max(1, trend.length - 1),
-    y: 30 - (value / maximum) * 23,
-  }));
-  const linePath = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
-  const areaPath = `${linePath} L ${points.at(-1)?.x ?? 109} 33 L 3 33 Z`;
-  const lineColor = tone === "warning" ? "var(--cs-warning)" : "var(--cs-brand)";
-  const fillColor = tone === "warning" ? "var(--cs-warning-subtle)" : "var(--cs-brand-subtle)";
+export default function DashboardCard({
+  title,
+  value,
+  description,
+  icon: Icon,
+  tone = "brand",
+  trend,
+}: DashboardCardProps) {
+  const isWarning = tone === "warning";
+  const iconStyle = isWarning
+    ? "bg-[#fef3c7] text-[#b45309]"
+    : "bg-[#e4f0e9] text-[#176b50]";
+
+  const lineColor = isWarning ? "#b45309" : "#176b50";
+  const fillColor = isWarning ? "#b45309" : "#176b50";
+
+  // Calculate sparkline path from trend if available and non-empty
+  let linePath = "M 2 26 C 20 27, 34 18, 54 20 C 74 22, 84 10, 96 12 C 102 13, 106 6, 109 4";
+  let areaPath = "M 2 26 C 20 27, 34 18, 54 20 C 74 22, 84 10, 96 12 C 102 13, 106 6, 109 4 L 109 34 L 2 34 Z";
+
+  if (trend && trend.length > 1) {
+    const maximum = Math.max(1, ...trend);
+    const points = trend.map((val, idx) => ({
+      x: 3 + (idx * 104) / Math.max(1, trend.length - 1),
+      y: 28 - (val / maximum) * 22,
+    }));
+    const lineSegments = points.reduce((acc, point, idx) => {
+      if (idx === 0) return `M ${point.x} ${point.y}`;
+      const prev = points[idx - 1];
+      const midX = (prev.x + point.x) / 2;
+      return `${acc} C ${midX} ${prev.y}, ${midX} ${point.y}, ${point.x} ${point.y}`;
+    }, "");
+    linePath = lineSegments;
+    areaPath = `${lineSegments} L ${points[points.length - 1].x} 34 L ${points[0].x} 34 Z`;
+  }
 
   return (
-    <div className="dashboard-stat-card relative flex min-w-0 items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900 p-3 xl:px-4 xl:py-5">
-      <div className="flex w-full min-w-0 items-start gap-2.5">
-        <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconStyle}`}>
-          <Icon className="h-5 w-5" aria-hidden="true" />
+    <div className="relative flex min-w-0 items-center justify-between rounded-xl border border-[#d5ddda] bg-white p-2.5 sm:p-3 xl:p-3.5 shadow-xs overflow-hidden">
+      <div className="flex min-w-0 items-center gap-2.5 xl:gap-3">
+        <span className={`flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full ${iconStyle}`}>
+          <Icon className="h-4 w-4 sm:h-4.5 sm:w-4.5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-medium leading-5 text-slate-300 xl:text-base">{title}</p>
-          <p className="mt-0.5 text-2xl font-semibold leading-none tracking-tight text-slate-100 tabular-nums xl:text-3xl">
+          <p className="text-xs font-medium text-[#65736d]">{title}</p>
+          <p className="mt-0.5 text-xl sm:text-2xl xl:text-[26px] font-bold tracking-tight text-[#24322c] tabular-nums leading-tight">
             {value}
           </p>
-          <p className="mt-1 text-xs leading-4 text-slate-400 xl:text-sm">{description}</p>
+          <p className="mt-0.5 text-[10.5px] sm:text-[11px] text-[#65736d] leading-tight truncate max-w-[200px] xl:max-w-none">{description}</p>
         </div>
       </div>
-      <svg className="dashboard-sparkline absolute right-4 top-4 hidden h-12 w-44 2xl:block" viewBox="0 0 112 36" aria-hidden="true">
-        <path d={areaPath} fill={fillColor} />
-        <path d={linePath} fill="none" stroke={lineColor} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" />
+
+      {/* Decorative sparkline on the right */}
+      <svg
+        className="hidden sm:block h-7 w-20 sm:w-24 shrink-0 overflow-visible ml-2"
+        viewBox="0 0 110 34"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d={areaPath}
+          fill={fillColor}
+          fillOpacity="0.08"
+        />
+        <path
+          d={linePath}
+          fill="none"
+          stroke={lineColor}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
       </svg>
     </div>
   );

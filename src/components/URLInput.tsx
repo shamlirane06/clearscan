@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, ChevronDown, Close, LinkChain, LoadingCircle, WarningShield } from "./icons/ClearScanIcons";
+import { ArrowRight, ChevronDown, Link2, Loader2, X, AlertTriangle } from "lucide-react";
 import { validateAndNormalizeUrl } from "../utils/validation";
 
 interface URLInputProps {
@@ -16,7 +16,12 @@ const QUICK_LINKS = [
   { label: "Facebook", url: "https://www.facebook.com" },
 ];
 
-export default function URLInput({ onScan, loading, initialUrl = "", onInputChange }: URLInputProps) {
+export default function URLInput({
+  onScan,
+  loading,
+  initialUrl = "",
+  onInputChange,
+}: URLInputProps) {
   const [url, setUrl] = useState(initialUrl);
   const [validationError, setValidationError] = useState("");
 
@@ -36,100 +41,91 @@ export default function URLInput({ onScan, loading, initialUrl = "", onInputChan
   const handleSelectPreset = (presetUrl: string) => {
     setUrl(presetUrl);
     setValidationError("");
+    onInputChange?.();
   };
 
   return (
-    <div className="space-y-2">
-      <div>
-        <label htmlFor="url-field" className="sr-only">Paste an HTTP or HTTPS link</label>
-        <span className="sr-only">Your link is not opened</span>
-
-        <form onSubmit={handleSubmit} className="url-form flex items-center gap-2.5">
-          <div className="url-field-wrap relative flex-1">
-            <LinkChain className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              id="url-field"
-              type="text"
-              value={url}
-              aria-invalid={Boolean(validationError)}
-              aria-describedby={validationError ? "url-validation-error" : undefined}
-              onChange={(e) => {
-                setUrl(e.target.value);
+    <div className="space-y-1.5">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div className="relative flex-1 min-w-0">
+          <Link2 className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8a9a92]" />
+          <input
+            id="url-field"
+            type="text"
+            value={url}
+            aria-invalid={Boolean(validationError)}
+            aria-describedby={validationError ? "url-validation-error" : undefined}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              onInputChange?.();
+              if (validationError) setValidationError("");
+            }}
+            placeholder="Paste or enter a URL..."
+            className="h-8 xl:h-8.5 w-full rounded-lg border border-[#d5ddda] bg-white pl-8 pr-7 text-xs sm:text-[13px] text-[#24322c] placeholder:text-[#8a9a92] outline-none focus:border-[#176b50] focus:ring-1 focus:ring-[#176b50] transition-colors shadow-2xs"
+          />
+          {url && (
+            <button
+              type="button"
+              aria-label="Clear URL"
+              onClick={() => {
+                setUrl("");
                 onInputChange?.();
-                if (validationError) setValidationError("");
               }}
-              placeholder="Paste or enter a URL..."
-              className="url-input-control h-10 w-full rounded-lg border border-slate-700 bg-slate-950 pl-10 pr-10 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 xl:h-12"
-            />
-            {url && (
-              <button
-                type="button"
-                aria-label="Clear URL"
-                onClick={() => {
-                  setUrl("");
-                  onInputChange?.();
-                }}
-                className="url-clear-button absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-slate-200 xl:h-11 xl:w-11"
-                title="Clear input"
-              >
-                <Close className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-[#65736d] hover:text-[#24322c]"
+              title="Clear input"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading || !url.trim()}
-            className="url-submit-button ink-action inline-flex h-10 min-w-32 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 xl:h-12 xl:min-w-44 xl:px-5 xl:text-base"
-          >
-            {loading ? (
-              <>
-                <LoadingCircle className="h-4 w-4 animate-spin" />
-                <span>Checking</span>
-              </>
-            ) : (
-              <>
-                <span>Analyze URL</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </>
-            )}
-          </button>
-        </form>
+        <button
+          type="submit"
+          disabled={loading || !url.trim()}
+          className="inline-flex h-8 xl:h-8.5 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#176b50] hover:bg-[#155d46] px-3.5 text-xs sm:text-[13px] font-semibold text-white shadow-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#176b50]"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <span>Analyzing...</span>
+            </>
+          ) : (
+            <>
+              <span>Analyze URL</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </>
+          )}
+        </button>
+      </form>
 
-        {validationError && (
-          <div id="url-validation-error" className="mt-2.5 flex items-center gap-2 text-xs text-rose-400" role="alert">
-            <WarningShield className="h-4 w-4 shrink-0" />
-            <span>{validationError}</span>
-          </div>
-        )}
-      </div>
+      {validationError && (
+        <div id="url-validation-error" className="flex items-center gap-1.5 text-[11px] text-rose-600 font-medium" role="alert">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+          <span>{validationError}</span>
+        </div>
+      )}
 
-      <div className="border-t border-slate-700 pt-2">
-        <div className="quick-links-row flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
-          <span className="quick-links-label inline-flex min-h-8 shrink-0 items-center whitespace-nowrap text-xs font-medium text-slate-400 xl:text-sm">
-            <ChevronDown className="quick-links-chevron" aria-hidden="true" />
-            Try quick links:
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {QUICK_LINKS.map((link) => (
-              <button
-                key={link.label}
-                type="button"
-                aria-pressed={url === link.url}
-                onClick={() => {
-                  handleSelectPreset(link.url);
-                  onInputChange?.();
-                }}
-                className={`min-h-8 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 xl:text-sm ${
-                  url === link.url
-                    ? "border-teal-600 bg-teal-950 text-teal-700"
-                    : "border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800"
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
-          </div>
+      {/* Quick links row */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5">
+        <span className="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] font-medium text-[#65736d]">
+          <ChevronDown className="h-3 w-3" aria-hidden="true" />
+          Try quick links:
+        </span>
+        <div className="flex flex-wrap gap-1">
+          {QUICK_LINKS.map((link) => (
+            <button
+              key={link.label}
+              type="button"
+              onClick={() => handleSelectPreset(link.url)}
+              className={`rounded-full border border-[#d5ddda] px-2 py-0.5 text-[10.5px] font-medium transition-colors ${
+                url === link.url
+                  ? "bg-[#e4f0e9] text-[#176b50] border-[#176b50] font-semibold"
+                  : "bg-[#f4f6f5] text-[#24322c] hover:bg-[#e8edeb]"
+              }`}
+            >
+              {link.label}
+            </button>
+          ))}
         </div>
       </div>
     </div>

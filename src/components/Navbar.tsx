@@ -35,8 +35,8 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-900">
-      <div className="mx-auto flex h-14 w-full max-w-none items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 xl:h-[84px] xl:pl-8 xl:pr-7">
+    <header className={`shrink-0 z-40 border-none bg-[#f4f6f5] ${activePage === "history" ? "lg:hidden" : ""}`}>
+      <div className="mx-auto flex h-10 sm:h-11 xl:h-11 w-full max-w-none items-center justify-between gap-3 px-4 sm:px-6 lg:px-7">
         <div className="flex min-w-0 items-center">
           <button
             type="button"
@@ -51,27 +51,28 @@ export default function Navbar({
               <span className="block text-xs text-slate-400">QR &amp; link safety</span>
             </span>
           </button>
-        <div className="navbar-status hidden items-center gap-2 text-sm text-slate-400 lg:flex">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
-          <span className="font-medium text-slate-300">Local checks ready</span>
+          <div className="navbar-status hidden items-center gap-2 text-xs sm:text-sm text-slate-400 lg:flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+            <span className="font-medium text-slate-100">Local checks ready</span>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3 xl:gap-5">
+        <div className="flex shrink-0 items-center gap-3">
           <button
             type="button"
             onClick={() => handleNavClick("scanner")}
             aria-label="Scan QR code"
-            className="ink-action inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 sm:px-3.5 xl:min-h-11 xl:px-4 xl:text-sm"
+            className="ink-action inline-flex h-8 xl:h-8.5 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
           >
-            <QrCodeMark className="h-4 w-4" aria-hidden="true" />
+            <QrCodeMark className="h-3.5 w-3.5" aria-hidden="true" />
             <span className="hidden sm:inline">Scan QR Code</span>
           </button>
+
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-controls="mobile-navigation"
-            className="navbar-mobile-menu inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:hidden"
+            className="navbar-mobile-menu inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:hidden"
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
           >
@@ -104,7 +105,7 @@ export default function Navbar({
                     <span>{item.label}</span>
                   </div>
                   {item.badge !== undefined && (
-                  <span className="rounded-full bg-teal-950 px-2 py-0.5 text-xs font-semibold text-teal-700">
+                    <span className="rounded-full bg-teal-950 px-2 py-0.5 text-xs font-semibold text-teal-700">
                       {item.badge}
                     </span>
                   )}
