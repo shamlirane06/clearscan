@@ -286,7 +286,7 @@ flowchart TD
 
 ### Frontend-Backend Interaction Sequence Diagram
 
-```mermaid
+```
 sequenceDiagram
     autonumber
     actor User as User
