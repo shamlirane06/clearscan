@@ -120,7 +120,10 @@ export function performClientFallbackAnalysis(rawUrl: string, backendFailure = "
   const ipv4 = host.match(/^\d{1,3}(?:\.\d{1,3}){3}$/);
   if (ipv4 || host.includes(":")) add("IP Address Detection", 20, "URL uses a raw IP address instead of a domain name.", `Host: ${host}`);
   if (parsed.port && !["80", "443"].includes(parsed.port)) add("Unusual Port", 15, "URL specifies a non-standard port.", `Port: ${parsed.port}`);
-  if (/%(?:00|0[aAdD]|25|3[cCeE]|2[27])/i.test(normalized)) add("Suspicious Encoding", 20, "URL contains suspicious encoded characters that may disguise the destination.", "Suspicious encoding detected");
+  const encodingMatches = normalized.match(/%(?:00|0[aAdD]|25|3[cCeE]|2[27])/gi);
+  if (encodingMatches && encodingMatches.length > 0) {
+    add("Suspicious Encoding", 20, "URL contains suspicious encoded characters that may disguise the destination.", `Encoded pattern: ${[...new Set(encodingMatches)].join(", ")}`);
+  }
   const foundKeywords = suspiciousKeywords.filter((keyword) => host.includes(keyword));
   if (foundKeywords.length) add("Suspicious Domain Keywords", Math.min(foundKeywords.length * 12, 35), `The domain contains keywords commonly used in phishing URLs: ${foundKeywords.join(", ")}.`, `Domain: ${host}`);
   const hostLabels = host.split(".");
@@ -136,8 +139,9 @@ export function performClientFallbackAnalysis(rawUrl: string, backendFailure = "
   if (host.startsWith("xn--") || host.includes(".xn--")) add("Punycode Domain", 25, "This domain uses Punycode, which can be used to create visually similar lookalike domains.", `Domain: ${host}`);
   if (shorteners.some((domain) => host === domain || host.endsWith(`.${domain}`))) add("URL Shortener Detected", 20, "This URL uses a shortening service; its destination cannot be checked without following the redirect.", `Shortener: ${host}`);
   if (normalized.length > 200) add("Excessive URL Length", 10, "This URL is unusually long.", `Length: ${normalized.length}`);
-  if (parsed.host.includes("@")) add("Misleading @ Symbol", 30, "The URL authority contains an @ symbol, which can obscure the actual host.", "URL authority contains @");
-  if ([...parsed.search].length > 10) add("Excessive Query Parameters", 10, "The URL contains more than ten query parameters.", `${[...parsed.search].length} parameters detected`);
+  if (parsed.host.includes("@")) add("Misleading @ Symbol", 30, "The URL authority contains an @ symbol, which can obscure the actual host.", `Authority: ${parsed.host}`);
+  const queryParamCount = parsed.search ? [...parsed.searchParams.keys()].length : 0;
+  if (queryParamCount > 10) add("Excessive Query Parameters", 10, "The URL contains more than ten query parameters.", `${queryParamCount} parameters detected`);
   const pathWords = ["login", "signin", "verify", "account", "password", "secure", "update", "confirm", "banking"].filter((word) => parsed.pathname.toLowerCase().includes(word));
   if (pathWords.length) add("Suspicious Path Keywords", 15, `The URL path contains sensitive keywords: ${pathWords.join(", ")}.`, `Path: ${parsed.pathname}`);
   if (checks.length === 0) safe("Local URL Heuristics", "No suspicious patterns were detected by the local URL checks. This does not verify the website or its reputation.");
@@ -154,7 +158,7 @@ export function performClientFallbackAnalysis(rawUrl: string, backendFailure = "
   };
   const warnings = checks.filter((check) => !check.passed).map((check) => check.explanation);
   return {
-    url: rawUrl, status: classification === "LOW_RISK" ? "UNABLE_TO_VERIFY" : "DANGEROUS", message: message[classification],
+    url: normalized, status: classification === "LOW_RISK" ? "UNABLE_TO_VERIFY" : "DANGEROUS", message: message[classification],
     normalizedHostname: host, riskScore: score, riskClassification: classification, riskMessage: message[classification],
     securityChecks: checks, warnings,
     recommendedAction: score >= 50 ? "Do not open this link. Verify the sender through official channels." : score >= 25 ? "Verify the website through an official channel before interacting." : "Use normal caution. A low heuristic score is not a safety verification.",

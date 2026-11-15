@@ -52,10 +52,19 @@ public class UrlValidationAnalyzer implements SecurityAnalyzer {
         }
 
         // Check for suspicious URL encoding
-        if (SUSPICIOUS_ENCODING.matcher(rawUrl).find()) {
+        var encodingMatcher = SUSPICIOUS_ENCODING.matcher(rawUrl);
+        if (encodingMatcher.find()) {
+            List<String> matches = new ArrayList<>();
+            matches.add(encodingMatcher.group());
+            while (encodingMatcher.find()) {
+                String match = encodingMatcher.group();
+                if (!matches.contains(match)) {
+                    matches.add(match);
+                }
+            }
             results.add(SecurityCheckResult.warning("Suspicious Encoding",
                     20, "URL contains suspicious encoded characters that may be used to disguise the true destination.",
-                    "Suspicious encoding detected in URL"));
+                    "Encoded pattern: " + String.join(", ", matches)));
         }
 
         return results;

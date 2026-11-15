@@ -1,10 +1,15 @@
 import type { BackendScanResponse, ScanHistoryItem } from "../types/scan";
 
 export function sanitizeStoredUrl(value: string): string {
+  if (!value || value === "[URL details removed]") return value;
   try {
-    const url = new URL(value);
+    const target = /^[a-z][a-z\d+.-]*:\/\//i.test(value) ? value : `https://${value}`;
+    const url = new URL(target);
     if (!["http:", "https:"].includes(url.protocol) || url.hostname.includes("%")) return "[URL details removed]";
-    return url.origin;
+    // Remove embedded credentials if present, but preserve full destination URL including path and query
+    url.username = "";
+    url.password = "";
+    return url.toString();
   } catch {
     return "[URL details removed]";
   }
@@ -16,7 +21,7 @@ export function sanitizeScanForHistory<T extends BackendScanResponse>(scan: T): 
     url: sanitizeStoredUrl(scan.url),
     securityChecks: scan.securityChecks.map((check) => ({
       ...check,
-      evidence: /authority|path|query/i.test(check.checkName) ? "URL detail omitted from local history." : check.evidence,
+      evidence: check.evidence,
     })),
   };
 }

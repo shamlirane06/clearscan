@@ -1,292 +1,351 @@
 import { useState } from "react";
 import {
-  WarningTriangle,
   CheckCircle,
   CheckMark,
   ChevronDown,
-  ChevronUp,
+  Close,
   CopyMark,
-  GlobeMark,
-  LockMark,
-  Processor,
+  HelpCircle,
+  InfoCircle,
   ReportDocument,
   RotateBack,
-  ScanHistory,
-  ShieldCheck,
-  WarningShield,
+  WarningTriangle,
 } from "./icons/ClearScanIcons";
-import type { BackendScanResponse } from "../types/scan";
+import type { BackendScanResponse, SecurityCheckResult } from "../types/scan";
 import RiskMeter from "./RiskMeter";
-import SecurityCheckItem from "./SecurityCheckItem";
+import SecurityCheckItem, { deriveCheckStatus } from "./SecurityCheckItem";
 
 interface SecurityReportProps {
   report: BackendScanResponse;
   onReset?: () => void;
+  onClose?: () => void;
+  embedded?: boolean;
 }
 
-export default function SecurityReport({ report, onReset }: SecurityReportProps) {
+function categoriseChecks(checks: SecurityCheckResult[]) {
+  const passed: SecurityCheckResult[] = [];
+  const flagged: SecurityCheckResult[] = [];
+  const notChecked: SecurityCheckResult[] = [];
+  const unableToVerify: SecurityCheckResult[] = [];
+
+  for (const check of checks) {
+    const status = deriveCheckStatus(check);
+    if (status === "Passed") passed.push(check);
+    else if (status === "Not Checked") notChecked.push(check);
+    else if (status === "Unable to Verify") unableToVerify.push(check);
+    else flagged.push(check);
+  }
+  return { passed, flagged, notChecked, unableToVerify };
+}
+
+function severityOrder(check: SecurityCheckResult): number {
+  if (check.riskLevel === "CRITICAL") return 0;
+  if (check.riskLevel === "HIGH") return 1;
+  if (check.riskLevel === "MEDIUM") return 2;
+  if (check.riskLevel === "LOW" && !check.passed) return 3;
+  return 4;
+}
+
+function buildActionItems(report: BackendScanResponse): string[] {
+  const items: string[] = [];
+  const checks = report.securityChecks || [];
+  const flagged = checks.filter((check) => !check.passed && check.riskLevel !== "INFO");
+  const names = new Set(flagged.map((check) => check.checkName));
+
+  if (report.recommendedAction) items.push(report.recommendedAction);
+  if (names.has("URL Shortener Detected")) {
+    items.push("If you must inspect a shortened link, reveal the final destination with a URL preview service before opening it.");
+  }
+  if (names.has("Possible Brand Impersonation") || names.has("Lookalike Domain Detected")) {
+    items.push("Open the official website or app yourself. Do not use this link to reach the organisation.");
+  }
+  if (names.has("Suspicious Domain Keywords") || names.has("Suspicious Path Keywords")) {
+    items.push("Do not enter passwords, OTPs, or personal details on a page reached from an unsolicited message.");
+  }
+  if (names.has("IP Address Detection")) {
+    items.push("Treat an IP-only address as untrusted until you can confirm the operator through a known channel.");
+  }
+  if (names.has("Punycode Domain")) {
+    items.push("Compare the domain character by character with the official spelling before trusting it.");
+  }
+  if (
+    report.threatIntelligenceStatus === "NOT_CONFIGURED" ||
+    report.threatIntelligenceStatus === "UNAVAILABLE" ||
+    report.threatIntelligenceStatus === "NOT_CHECKED"
+  ) {
+    items.push("Google Safe Browsing was not completed for this scan. Recheck the URL through an official Safe Browsing lookup if you need more assurance.");
+  }
+  if (report.analysisSource === "LOCAL_FALLBACK") {
+    items.push("Backend analysis did not complete. Treat these results as a local heuristic review only.");
+  }
+  if (flagged.length === 0 && report.riskScore >= 0 && report.riskScore < 25) {
+    items.push("Even with no flagged indicators, do not enter sensitive information on a site reached through an unsolicited link.");
+  }
+  return [...new Set(items)];
+}
+
+type AnalysisState = "Completed" | "Not Checked" | "Failed" | "Unable to Verify";
+
+function analysisStatuses(report: BackendScanResponse): { label: string; status: AnalysisState; detail: string }[] {
+  const local: AnalysisState = "Completed";
+  const backend: AnalysisState = report.analysisSource === "LOCAL_FALLBACK" ? "Failed" : "Completed";
+  let browsing: AnalysisState = "Not Checked";
+  let browsingDetail = "This check was not run for the destination URL.";
+
+  switch (report.threatIntelligenceStatus) {
+    case "CHECKED_NO_MATCH":
+      browsing = "Completed";
+      browsingDetail = "Google Safe Browsing returned no listed threat for this URL.";
+      break;
+    case "MATCH_FOUND":
+      browsing = "Completed";
+      browsingDetail = "Google Safe Browsing reported a known threat match.";
+      break;
+    case "UNAVAILABLE":
+      browsing = "Unable to Verify";
+      browsingDetail = "Google Safe Browsing could not be reached.";
+      break;
+    case "NOT_CHECKED":
+      browsing = "Not Checked";
+      browsingDetail = "Google Safe Browsing was skipped because the backend scan did not complete.";
+      break;
+    default:
+      browsing = "Not Checked";
+      browsingDetail = "Google Safe Browsing is not configured for this environment.";
+  }
+
+  return [
+    {
+      label: "Local heuristic analysis",
+      status: local,
+      detail: "Structural URL checks ran on protocol, host, path, and query parameters.",
+    },
+    {
+      label: "Backend analysis",
+      status: backend,
+      detail:
+        backend === "Failed"
+          ? report.analysisNotice || "The analysis server could not complete this scan."
+          : "Server-side heuristic analysis completed for this destination.",
+    },
+    {
+      label: "Google Safe Browsing",
+      status: browsing,
+      detail: browsingDetail,
+    },
+  ];
+}
+
+function statusClass(status: AnalysisState) {
+  if (status === "Completed") return "cs-analysis-pill cs-analysis-pill--ok";
+  if (status === "Failed") return "cs-analysis-pill cs-analysis-pill--fail";
+  if (status === "Unable to Verify") return "cs-analysis-pill cs-analysis-pill--unable";
+  return "cs-analysis-pill cs-analysis-pill--idle";
+}
+
+export default function SecurityReport({ report, onReset, onClose, embedded = false }: SecurityReportProps) {
   const [copied, setCopied] = useState(false);
   const [reportExported, setReportExported] = useState(false);
-  const [showAllChecks, setShowAllChecks] = useState(true);
+  const [showAllChecks, setShowAllChecks] = useState(false);
 
-  const copyUrl = () => {
-    navigator.clipboard.writeText(report.url);
+  const closeHandler = onClose ?? onReset;
+  const destinationUrl = report.url || "";
+
+  const copyUrl = async () => {
+    await navigator.clipboard.writeText(destinationUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const exportReportJson = () => {
-    const jsonStr = JSON.stringify(report, null, 2);
-    navigator.clipboard.writeText(jsonStr);
+  const exportReportJson = async () => {
+    await navigator.clipboard.writeText(JSON.stringify(report, null, 2));
     setReportExported(true);
     setTimeout(() => setReportExported(false), 2000);
   };
 
-  const isCritical = report.riskScore >= 75 || report.riskClassification === "CRITICAL_RISK";
-  const isHigh = report.riskScore >= 50 && report.riskScore < 75;
-  const isModerate = report.riskScore >= 25 && report.riskScore < 50;
-  const isUnable = report.riskClassification === "UNABLE_TO_VERIFY";
+  const categories = categoriseChecks(report.securityChecks || []);
+  const sortedFlagged = [...categories.flagged].sort((a, b) => severityOrder(a) - severityOrder(b));
+  const actionItems = buildActionItems(report);
+  const statuses = analysisStatuses(report);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-      {/* Top Dossier Header */}
-      <div
-        className={`border-b p-6 sm:p-7 transition-colors ${
-          isCritical
-            ? "border-rose-500/20 bg-rose-950/20"
-            : isHigh
-            ? "border-amber-500/20 bg-amber-950/20"
-            : isModerate
-            ? "border-yellow-500/15 bg-yellow-950/10"
-            : isUnable
-            ? "border-slate-800 bg-slate-900/50"
-            : "border-teal-500/20 bg-teal-950/15"
-        }`}
-      >
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-800 text-slate-300">
-                {isCritical || isHigh ? (
-                  <WarningShield className="h-4 w-4 text-rose-400" />
-                ) : isModerate ? (
-                  <WarningTriangle className="h-4 w-4 text-yellow-400" />
-                ) : (
-                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                )}
-              </span>
-              <span className="text-xs font-medium text-slate-400">
-                Scan report · Ref #{report.timestamp ? report.timestamp.slice(-6) : "SCAN"}
-              </span>
-            </div>
+    <section className={`cs-scan-report ${embedded ? "is-embedded" : ""}`} aria-labelledby="cs-report-title">
+      <header className="cs-scan-report__header">
+        <div className="cs-scan-report__heading">
+          <h2 id="cs-report-title">Detailed Scan Report</h2>
+          <p className="cs-scan-report__url" title={destinationUrl}>
+            {destinationUrl}
+          </p>
+        </div>
+        {closeHandler && !embedded ? (
+          <button type="button" className="cs-scan-report__icon-btn" onClick={closeHandler} aria-label="Close report">
+            <Close className="h-5 w-5" />
+          </button>
+        ) : null}
+      </header>
 
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
-              {report.normalizedHostname || "Unresolved Destination"}
-            </h2>
-
-            <p className="max-w-xl text-sm leading-relaxed text-slate-300">
-              {report.riskMessage || report.message}
+      <div className="cs-scan-report__body">
+        <section className="cs-report-section cs-risk-overview" aria-labelledby="cs-risk-heading">
+          <div className="cs-risk-overview__copy">
+            <h3 id="cs-risk-heading">Risk overview</h3>
+            <p className="cs-risk-overview__message">{report.riskMessage || report.message}</p>
+            <p className="cs-risk-overview__note">
+              <InfoCircle className="h-4 w-4" />
+              <span>
+                This score is a heuristic assessment of suspicious URL indicators. It is not the probability that the URL is
+                malicious, and a low score is not a guarantee of safety.
+              </span>
             </p>
           </div>
+          <RiskMeter score={report.riskScore} classification={report.riskClassification} size="lg" />
+        </section>
 
-          <div className="shrink-0 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-            <RiskMeter score={report.riskScore} classification={report.riskClassification} />
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6 space-y-6">
-        {/* Scanned Destination URL Box */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span className="flex items-center gap-1.5 font-medium text-slate-300">
-              <GlobeMark className="h-4 w-4 text-slate-400" />
-              Destination URL
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={copyUrl}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-800/60 px-2.5 py-1 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                {copied ? (
-                  <>
-                    <CheckMark className="h-3.5 w-3.5 text-teal-400" />
-                    <span className="text-teal-400">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <CopyMark className="h-3.5 w-3.5" />
-                    <span>Copy URI</span>
-                  </>
-                )}
+        <section className="cs-report-section" aria-labelledby="cs-destination-heading">
+          <div className="cs-section-head">
+            <h3 id="cs-destination-heading">Destination details</h3>
+            <div className="cs-report-actions">
+              <button type="button" className="cs-report-btn" onClick={copyUrl}>
+                {copied ? <CheckMark className="h-3.5 w-3.5" /> : <CopyMark className="h-3.5 w-3.5" />}
+                {copied ? "Copied" : "Copy URL"}
               </button>
-
-              <button
-                onClick={exportReportJson}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-800/60 px-2.5 py-1 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-                title="Export complete analysis in JSON format"
-              >
-                {reportExported ? (
-                  <>
-                    <CheckMark className="h-3.5 w-3.5 text-teal-400" />
-                    <span className="text-teal-400">JSON Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <ReportDocument className="h-3.5 w-3.5" />
-                    <span>Export JSON</span>
-                  </>
-                )}
+              <button type="button" className="cs-report-btn" onClick={exportReportJson}>
+                {reportExported ? <CheckMark className="h-3.5 w-3.5" /> : <ReportDocument className="h-3.5 w-3.5" />}
+                {reportExported ? "JSON copied" : "Export JSON"}
               </button>
             </div>
           </div>
-          <p className="mt-2.5 break-all font-mono text-sm text-slate-200 select-all bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80">
-            {report.url}
-          </p>
-        </div>
+          <p className="cs-destination-url">{destinationUrl}</p>
+        </section>
 
-        {/* Telemetry Status Indicators */}
-        <div className="flex flex-wrap items-center gap-2.5 text-xs">
-          <span className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-300">
-            <Processor className="h-3.5 w-3.5 text-teal-400" />
-            <span>{report.analysisSource === "LOCAL_FALLBACK" ? "Local heuristic analysis" : "Backend heuristic analysis"}</span>
-          </span>
-
-          <span
-            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 ${
-              report.threatIntelligenceStatus === "CHECKED_NO_MATCH"
-                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-                : report.threatIntelligenceStatus === "MATCH_FOUND"
-                ? "border-rose-500/30 bg-rose-500/10 text-rose-300"
-                : "border-slate-800 bg-slate-950/70 text-slate-400"
-            }`}
-          >
-            <span
-              className={`h-2 w-2 rounded-full ${
-                report.threatIntelligenceStatus === "CHECKED_NO_MATCH" ? "bg-emerald-400" : report.threatIntelligenceStatus === "MATCH_FOUND" ? "bg-rose-400" : "bg-amber-400"
-              }`}
-            />
-            <span>
-              {report.threatIntelligenceStatus === "CHECKED_NO_MATCH" ? "Google Safe Browsing: checked, no match" :
-                report.threatIntelligenceStatus === "MATCH_FOUND" ? "Google Safe Browsing: threat match" :
-                report.threatIntelligenceStatus === "UNAVAILABLE" ? "Google Safe Browsing: unavailable" :
-                report.threatIntelligenceStatus === "NOT_CHECKED" ? "Google Safe Browsing: not checked" :
-                "Google Safe Browsing: not configured"}
-            </span>
-          </span>
-
-          <span className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-400">
-            <LockMark className="h-3.5 w-3.5 text-slate-400" />
-            <span>Destination URL is analyzed as text; no redirects are followed</span>
-          </span>
-
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-slate-400 font-mono text-xs">
-            <ScanHistory className="h-3.5 w-3.5 text-slate-400" />
-            <span>
-              {new Date(report.timestamp).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              })}
-            </span>
-          </span>
-        </div>
-
-        {report.analysisNotice && <p className="rounded-xl border border-amber-500/25 bg-amber-950/15 p-4 text-sm text-amber-200" role="status">{report.analysisNotice}</p>}
-
-        {/* Actionable Mitigation Guidance */}
-        <div
-          className={`rounded-xl border p-4 sm:p-5 transition-colors ${
-            isCritical
-              ? "border-rose-500/30 bg-rose-950/20 text-rose-200"
-              : isHigh
-              ? "border-amber-500/30 bg-amber-950/20 text-amber-200"
-              : isModerate
-              ? "border-yellow-500/20 bg-yellow-950/15 text-yellow-200"
-              : "border-emerald-500/20 bg-emerald-950/20 text-emerald-200"
-          }`}
-        >
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <CheckCircle className="h-4 w-4 shrink-0" />
-            <span>Recommended next step</span>
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            {report.recommendedAction ||
-              "Destination passed heuristic scrutiny. Always confirm sensitive transactions directly inside official mobile banking apps."}
-          </p>
-        </div>
-
-        {/* Active Security Warnings */}
-        {report.warnings && report.warnings.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-amber-300">
-              Security warnings ({report.warnings.length})
-            </h3>
-            <div className="space-y-2">
-              {report.warnings.map((warn, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-950/15 p-3.5 text-sm text-amber-200 leading-relaxed"
-                >
-                  <WarningTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                  <span>{warn}</span>
+        <section className="cs-report-section" aria-labelledby="cs-analysis-heading">
+          <h3 id="cs-analysis-heading">Analysis status</h3>
+          <ul className="cs-analysis-list">
+            {statuses.map((item) => (
+              <li key={item.label}>
+                <div className="cs-analysis-row">
+                  <span>{item.label}</span>
+                  <span className={statusClass(item.status)}>{item.status}</span>
                 </div>
+                <p>{item.detail}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="cs-report-section" aria-labelledby="cs-checks-heading">
+          <h3 id="cs-checks-heading">Security checks</h3>
+          <ul className="cs-check-summary">
+            <li>
+              <CheckCircle className="h-4 w-4 text-[var(--cs-success)]" />
+              <strong>{categories.passed.length}</strong>
+              <span>Passed</span>
+            </li>
+            <li>
+              <WarningTriangle className="h-4 w-4 text-[var(--cs-warning)]" />
+              <strong>{categories.flagged.length}</strong>
+              <span>Flagged</span>
+            </li>
+            <li>
+              <HelpCircle className="h-4 w-4 text-[var(--cs-text-muted)]" />
+              <strong>{categories.notChecked.length}</strong>
+              <span>Not Checked</span>
+            </li>
+            <li>
+              <WarningTriangle className="h-4 w-4 text-[var(--cs-danger)]" />
+              <strong>{categories.unableToVerify.length}</strong>
+              <span>Unable to Verify</span>
+            </li>
+          </ul>
+        </section>
+
+        {sortedFlagged.length > 0 ? (
+          <section className="cs-report-section" aria-labelledby="cs-findings-heading">
+            <h3 id="cs-findings-heading">Security findings ({sortedFlagged.length})</h3>
+            <p className="cs-section-help">Detected indicators, sorted by severity. Evidence is taken from the analyzed URL.</p>
+            <div className="cs-finding-list">
+              {sortedFlagged.map((check, index) => (
+                <SecurityCheckItem key={`${check.checkName}-${index}`} check={check} variant="finding" />
               ))}
             </div>
-          </div>
+          </section>
+        ) : (
+          <section className="cs-report-section" aria-labelledby="cs-findings-heading">
+            <h3 id="cs-findings-heading">Security findings</h3>
+            <p className="cs-section-help">No flagged indicators were returned for this destination.</p>
+          </section>
         )}
 
-        {/* Multi-Layer Inspection Checks */}
-        {report.securityChecks && report.securityChecks.length > 0 && (
-          <div className="border-t border-slate-800 pt-6 space-y-4">
-            <button
-              onClick={() => setShowAllChecks(!showAllChecks)}
-              className="flex w-full items-center justify-between text-left group rounded-xl p-2 -mx-2 hover:bg-slate-800/40 transition-colors"
-            >
-              <div>
-                <h3 className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">
-                  Security checks ({report.securityChecks.length})
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Granular evaluation logs across protocol, reputation, typosquatting, and threat feeds.
-                </p>
-              </div>
-              <span className="rounded-lg border border-slate-700 bg-slate-800 p-1.5 text-slate-400 group-hover:text-white transition-colors">
-                {showAllChecks ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </span>
-            </button>
+        <section className="cs-report-section" aria-labelledby="cs-actions-heading">
+          <h3 id="cs-actions-heading">Recommended actions</h3>
+          {actionItems.length > 0 ? (
+            <ul className="cs-action-list">
+              {actionItems.map((item, index) => (
+                <li key={item} className={index === 0 ? "is-primary" : undefined}>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="cs-section-help">No additional actions were generated from this result.</p>
+          )}
+        </section>
 
-            {showAllChecks && (
-              <div className="space-y-2.5">
-                {report.securityChecks.map((check, idx) => (
-                  <SecurityCheckItem key={idx} check={check} />
+        {report.securityChecks && report.securityChecks.length > 0 ? (
+          <section className="cs-report-section" aria-labelledby="cs-log-heading">
+            <button
+              type="button"
+              className="cs-log-toggle"
+              onClick={() => setShowAllChecks((value) => !value)}
+              aria-expanded={showAllChecks}
+            >
+              <span>
+                <h3 id="cs-log-heading">Complete security check log</h3>
+                <p>All {report.securityChecks.length} individual checks and their results.</p>
+              </span>
+              <ChevronDown className={`h-4 w-4 ${showAllChecks ? "rotate-180" : ""}`} />
+            </button>
+            {showAllChecks ? (
+              <div className="cs-check-log">
+                {report.securityChecks.map((check, index) => (
+                  <SecurityCheckItem key={`${check.checkName}-log-${index}`} check={check} variant="log" />
                 ))}
               </div>
-            )}
-          </div>
-        )}
+            ) : null}
+          </section>
+        ) : null}
 
-        {/* Footer controls */}
-        <div className="flex flex-col gap-4 border-t border-slate-800 pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-400">
-            Heuristic indicators are provided for proactive risk prevention. Always maintain operational caution.
+        {report.analysisNotice ? (
+          <p className="cs-analysis-notice" role="status">
+            {report.analysisNotice}
           </p>
-
-          {onReset && (
-            <button
-              onClick={onReset}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 transition-colors hover:bg-slate-700 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-            >
-              <RotateBack className="h-3.5 w-3.5" />
-              <span>Scan Another Destination</span>
-            </button>
-          )}
-        </div>
+        ) : null}
       </div>
-    </div>
+
+      <footer className="cs-scan-report__footer">
+        <div className="cs-report-actions">
+          <button type="button" className="cs-report-btn" onClick={copyUrl}>
+            {copied ? <CheckMark className="h-3.5 w-3.5" /> : <CopyMark className="h-3.5 w-3.5" />}
+            {copied ? "Copied" : "Copy URL"}
+          </button>
+          <button type="button" className="cs-report-btn" onClick={exportReportJson}>
+            {reportExported ? <CheckMark className="h-3.5 w-3.5" /> : <ReportDocument className="h-3.5 w-3.5" />}
+            {reportExported ? "JSON copied" : "Export JSON"}
+          </button>
+        </div>
+        <div className="cs-report-actions">
+          {onReset && onReset !== closeHandler ? (
+            <button type="button" className="cs-report-btn" onClick={onReset}>
+              <RotateBack className="h-3.5 w-3.5" />
+              Scan another
+            </button>
+          ) : null}
+          {closeHandler && !embedded ? (
+            <button type="button" className="cs-report-btn cs-report-btn--primary" onClick={closeHandler}>
+              Close Report
+            </button>
+          ) : null}
+        </div>
+      </footer>
+    </section>
   );
 }

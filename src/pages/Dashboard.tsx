@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   BarChart2,
   History,
-  X,
 } from "lucide-react";
 import DashboardCard from "../components/DashboardCard";
 import ActivityChart from "../components/ActivityChart";
@@ -253,20 +252,9 @@ export default function Dashboard({
 
       {/* Immediate scan result report (displayed as a focused modal overlay so layout does not expand or scroll) */}
       {quickResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[#d5ddda] bg-white p-5 sm:p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#e8edeb]">
-              <h3 className="text-base sm:text-lg font-bold text-[#24322c]">Scan Analysis Result</h3>
-              <button
-                type="button"
-                onClick={() => setQuickResult(null)}
-                className="rounded-lg p-1.5 text-[#65736d] hover:bg-[#f4f6f5] hover:text-[#24322c] transition-colors"
-                aria-label="Close report"
-              >
-                <X className="h-4.5 w-4.5" />
-              </button>
-            </div>
-            <SecurityReport report={quickResult} onReset={() => setQuickResult(null)} />
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-[#24322c]/40 p-3 sm:p-4 overflow-y-auto">
+          <div className="my-4 w-full max-w-[52rem]">
+            <SecurityReport report={quickResult} onClose={() => setQuickResult(null)} />
           </div>
         </div>
       )}

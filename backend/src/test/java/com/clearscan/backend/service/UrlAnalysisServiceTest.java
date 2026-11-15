@@ -153,4 +153,17 @@ class UrlAnalysisServiceTest {
         assertEquals("NOT_CONFIGURED", result.getThreatIntelligenceStatus());
         assertEquals("LOW_RISK", result.getRiskClassification());
     }
+
+    @Test
+    @DisplayName("Complete URL with path and query parameters is preserved and analyzed")
+    void testUrlPreservesPathAndQueryParams() {
+        String testUrl = "http://sbi-kyc-update.xyz/verify-account?urgent=true";
+        ScanResponse result = service.analyze(testUrl);
+        assertEquals(testUrl, result.getUrl());
+        assertEquals("sbi-kyc-update.xyz", result.getNormalizedHostname());
+        assertEquals(56, result.getRiskScore());
+        assertEquals("HIGH_RISK", result.getRiskClassification());
+        assertTrue(result.getSecurityChecks().stream()
+                .anyMatch(c -> c.getCheckName().equals("Suspicious Path Keywords") && !c.isPassed() && c.getEvidence().contains("/verify-account")));
+    }
 }

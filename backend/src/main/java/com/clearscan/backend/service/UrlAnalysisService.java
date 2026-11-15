@@ -117,7 +117,7 @@ public class UrlAnalysisService {
         String hostname = parsedUri.getHost() != null ? parsedUri.getHost().toLowerCase() : "unknown";
 
         return new ScanResponse()
-                .url(rawUrl)
+                .url(normalizedUrl)
                 .status(legacyStatus)
                 .message(classification.getMessage())
                 .normalizedHostname(hostname)

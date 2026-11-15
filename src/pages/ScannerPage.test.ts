@@ -59,4 +59,12 @@ describe("QR Scanner Page Logic", () => {
     expect(validWebp.type.startsWith("image/")).toBe(true);
     expect(invalidPdf.type.startsWith("image/")).toBe(false);
   });
+
+  it("preserves exact decoded URL with path and query parameters", () => {
+    const raw = "http://sbi-kyc-update.xyz/verify-account?urgent=true";
+    const validation = validateAndNormalizeUrl(raw);
+
+    expect(validation.isValid).toBe(true);
+    expect(validation.normalizedUrl).toBe("http://sbi-kyc-update.xyz/verify-account?urgent=true");
+  });
 });

@@ -1,79 +1,165 @@
-import { AlertOctagon, CheckCircle, HelpCircle, WarningShield, WarningTriangle } from "./icons/ClearScanIcons";
+import { useState } from "react";
+import { AlertOctagon, CheckCircle, ChevronDown, HelpCircle, WarningShield, WarningTriangle } from "./icons/ClearScanIcons";
 import type { SecurityCheckResult } from "../types/scan";
 
 interface SecurityCheckItemProps {
   check: SecurityCheckResult;
+  variant?: "finding" | "log";
 }
 
-export default function SecurityCheckItem({ check }: SecurityCheckItemProps) {
-  const isPass = check.passed;
-  const isCritical = check.riskLevel === "CRITICAL";
-  const isHigh = check.riskLevel === "HIGH";
-  const isWarning = check.riskLevel === "WARNING" || check.riskLevel === "MEDIUM";
+export type CheckDisplayStatus = "Passed" | "Flagged" | "Not Checked" | "Unable to Verify" | "Critical";
 
-  let statusBadge = "bg-emerald-500/10 text-emerald-300 border-emerald-500/30";
-  let statusText = "Passed";
+export function deriveCheckStatus(check: SecurityCheckResult): CheckDisplayStatus {
+  const { passed, riskLevel } = check;
+  const isExternalCheck = /threat|safe browsing|reputation|external/i.test(check.checkName);
 
-  if (isCritical) {
-    statusBadge = "bg-rose-500/15 text-rose-300 border-rose-500/30";
-    statusText = "Critical Threat";
-  } else if (isHigh) {
-    statusBadge = "bg-amber-500/15 text-amber-300 border-amber-500/30";
-    statusText = "Suspicious";
-  } else if (isWarning) {
-    statusBadge = "bg-yellow-500/10 text-yellow-300 border-yellow-500/30";
-    statusText = "Warning";
-  } else if (check.riskLevel === "INFO") {
-    statusBadge = "bg-slate-800 text-slate-300 border-slate-700";
-    statusText = "Info";
+  if (riskLevel === "CRITICAL") return "Critical";
+  if (riskLevel === "WARNING" && !passed) return "Unable to Verify";
+  if (isExternalCheck && !passed) {
+    const isUnavailable = /unavailable|failed|could not|error/i.test(check.explanation) || /unavailable/i.test(check.evidence);
+    return isUnavailable ? "Unable to Verify" : "Not Checked";
+  }
+  if (riskLevel === "INFO") return passed ? "Not Checked" : "Not Checked";
+  if (riskLevel === "HIGH" || riskLevel === "MEDIUM" || (riskLevel === "LOW" && !passed)) return "Flagged";
+  if (passed) return "Passed";
+  return "Flagged";
+}
+
+export function severityLabel(check: SecurityCheckResult): string {
+  switch (check.riskLevel) {
+    case "CRITICAL":
+      return "Critical";
+    case "HIGH":
+      return "High";
+    case "MEDIUM":
+      return "Moderate";
+    case "WARNING":
+      return "Unable to Verify";
+    case "INFO":
+      return "Informational";
+    default:
+      return check.passed ? "Low" : "Low";
+  }
+}
+
+export function findingRiskWhy(check: SecurityCheckResult): string {
+  const name = check.checkName.toLowerCase();
+  if (name.includes("impersonation") || name.includes("lookalike") || name.includes("punycode")) {
+    return "Attackers use lookalike names to impersonate trusted brands and collect credentials.";
+  }
+  if (name.includes("shortener")) {
+    return "A shortened link can hide the real destination until after you open it.";
+  }
+  if (name.includes("keyword") || name.includes("path")) {
+    return "Urgent login or verification wording is commonly used to rush people into phishing pages.";
+  }
+  if (name.includes("tld")) {
+    return "Some top-level domains are frequently abused for short-lived phishing sites.";
+  }
+  if (name.includes("http") || name.includes("validation")) {
+    return "Unencrypted HTTP lets a network attacker alter the page or steal data in transit.";
+  }
+  if (name.includes("ip address")) {
+    return "Legitimate services almost always use a registered domain, not a raw address.";
+  }
+  if (name.includes("query")) {
+    return "A large query string can hide tracking, redirects, or obfuscated payloads.";
+  }
+  if (name.includes("encoding") || name.includes("@")) {
+    return "Encoded or misleading characters can conceal the true host from a casual glance.";
+  }
+  if (name.includes("port") || name.includes("subdomain") || name.includes("length")) {
+    return "Unusual URL structure can be a sign of obfuscation or a non-standard hosting setup.";
+  }
+  if (name.includes("threat")) {
+    return "A threat-intelligence match means the URL has been reported in a known-bad dataset.";
+  }
+  return check.explanation;
+}
+
+function statusTone(status: CheckDisplayStatus) {
+  switch (status) {
+    case "Critical":
+      return { icon: <AlertOctagon className="h-4 w-4" />, className: "cs-check-status cs-check-status--critical" };
+    case "Flagged":
+      return { icon: <WarningTriangle className="h-4 w-4" />, className: "cs-check-status cs-check-status--flagged" };
+    case "Unable to Verify":
+      return { icon: <WarningShield className="h-4 w-4" />, className: "cs-check-status cs-check-status--unable" };
+    case "Not Checked":
+      return { icon: <HelpCircle className="h-4 w-4" />, className: "cs-check-status cs-check-status--unchecked" };
+    default:
+      return { icon: <CheckCircle className="h-4 w-4" />, className: "cs-check-status cs-check-status--passed" };
+  }
+}
+
+function FindingBody({ check }: { check: SecurityCheckResult }) {
+  return (
+    <dl className="cs-finding-meta">
+      <div>
+        <dt>Explanation</dt>
+        <dd>{check.explanation}</dd>
+      </div>
+      {check.evidence ? (
+        <div>
+          <dt>Evidence</dt>
+          <dd>
+            <code>{check.evidence}</code>
+          </dd>
+        </div>
+      ) : null}
+      <div>
+        <dt>Why this could be a security risk</dt>
+        <dd>{findingRiskWhy(check)}</dd>
+      </div>
+    </dl>
+  );
+}
+
+export default function SecurityCheckItem({ check, variant = "finding" }: SecurityCheckItemProps) {
+  const [open, setOpen] = useState(variant === "finding");
+  const status = deriveCheckStatus(check);
+  const tone = statusTone(status);
+  const severity = severityLabel(check);
+
+  if (variant === "log") {
+    return (
+      <div className="cs-check-log-item">
+        <button
+          type="button"
+          className="cs-check-log-toggle"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+        >
+          <span className="cs-check-log-name">{check.checkName}</span>
+          <span className={tone.className}>
+            {tone.icon}
+            {status === "Critical" ? "Flagged" : status}
+          </span>
+          <ChevronDown className={`h-4 w-4 cs-check-log-chevron ${open ? "is-open" : ""}`} />
+        </button>
+        {open ? (
+          <div className="cs-check-log-body">
+            <p className="cs-check-log-severity">Severity: {severity}</p>
+            <FindingBody check={check} />
+          </div>
+        ) : null}
+      </div>
+    );
   }
 
   return (
-    <div
-      className={`rounded-xl border p-4 transition-colors ${
-        isCritical
-          ? "border-rose-500/30 bg-rose-950/20"
-          : !isPass
-          ? "border-amber-500/30 bg-amber-950/15"
-          : "border-slate-800 bg-slate-900/40 hover:border-slate-700"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 shrink-0">
-            {isCritical ? (
-              <AlertOctagon className="h-5 w-5 text-rose-400" />
-            ) : isHigh ? (
-              <WarningShield className="h-5 w-5 text-amber-400" />
-            ) : isWarning ? (
-              <WarningTriangle className="h-5 w-5 text-yellow-400" />
-            ) : check.riskLevel === "INFO" ? (
-              <HelpCircle className="h-5 w-5 text-slate-400" />
-            ) : (
-              <CheckCircle className="h-5 w-5 text-emerald-400" />
-            )}
-          </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-medium text-slate-200">
-              {check.checkName}
-            </h4>
-            <p className="text-xs leading-relaxed text-slate-400">{check.explanation}</p>
-
-            {check.evidence && (
-              <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-slate-700/70 bg-slate-950 px-2.5 py-1 text-xs text-slate-300">
-                <span className="text-slate-400 font-medium">Evidence:</span>
-                <span className="font-mono text-[11px] text-teal-300">{check.evidence}</span>
-              </div>
-            )}
-          </div>
+    <article className={`cs-finding ${status === "Critical" ? "is-critical" : ""}`}>
+      <header className="cs-finding-header">
+        <div>
+          <h4>{check.checkName}</h4>
+          <p className="cs-finding-severity">Severity: {severity}</p>
         </div>
-
-        <span
-          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusBadge}`}
-        >
-          {statusText}
+        <span className={tone.className}>
+          {tone.icon}
+          {status === "Critical" ? "Flagged" : status}
         </span>
-      </div>
-    </div>
+      </header>
+      <FindingBody check={check} />
+    </article>
   );
 }

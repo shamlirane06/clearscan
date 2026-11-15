@@ -354,7 +354,7 @@ export default function HistoryPage({
                     Score: {item.riskScore >= 0 ? `${item.riskScore}/100` : "—"} · {getRiskStatusLabel(getRiskStatus(item))}
                   </span>
                 </div>
-                <SecurityReport report={item} />
+                <SecurityReport report={item} embedded />
               </div>
             ))}
           </div>
@@ -882,47 +882,9 @@ export default function HistoryPage({
 
       {/* View Detailed Report Modal */}
       {viewingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="relative w-full max-w-3xl rounded-2xl border border-[#d5ddda] bg-white shadow-2xl overflow-hidden my-8">
-            <div className="flex items-center justify-between border-b border-[#d5ddda] px-6 py-4 bg-[#fafbfb]">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-[#24322c]">
-                  Detailed Scan Report
-                </h3>
-                <p className="text-xs text-[#65736d] font-mono mt-0.5 truncate max-w-md">
-                  {viewingItem.url}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setViewingItem(null)}
-                className="rounded-lg p-1.5 text-[#65736d] hover:bg-[#e8edeb] hover:text-[#24322c] transition-colors"
-                aria-label="Close dialog"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-6 max-h-[75vh] overflow-y-auto">
-              <SecurityReport report={viewingItem} />
-            </div>
-
-            <div className="flex items-center justify-end gap-3 border-t border-[#d5ddda] px-6 py-3.5 bg-[#fafbfb]">
-              <button
-                type="button"
-                onClick={() => copyUrl(viewingItem.url)}
-                className="rounded-lg border border-[#d5ddda] bg-white px-3.5 py-1.5 text-xs sm:text-sm font-medium text-[#24322c] hover:bg-[#f4f6f5] transition-colors"
-              >
-                Copy URL
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewingItem(null)}
-                className="rounded-lg bg-[#176b50] px-4 py-1.5 text-xs sm:text-sm font-semibold text-white hover:bg-[#155d46] transition-colors"
-              >
-                Close Report
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-[#24322c]/40 p-3 sm:p-4 overflow-y-auto">
+          <div className="my-4 w-full max-w-[52rem]">
+            <SecurityReport report={viewingItem} onClose={() => setViewingItem(null)} />
           </div>
         </div>
       )}

@@ -474,27 +474,9 @@ export default function ScannerPage({ onScanComplete }: ScannerPageProps) {
 
       {/* Scan Result Modal Dossier (Full SecurityReport) */}
       {scanResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[#d5ddda] bg-white p-5 sm:p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#e8edeb]">
-              <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#e4f0e9] text-[#176b50]">
-                  <QrCode className="h-4 w-4" />
-                </span>
-                <h3 className="text-base sm:text-lg font-bold text-[#24322c]">
-                  QR Destination Analysis
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="rounded-lg p-1.5 text-[#65736d] hover:bg-[#f4f6f5] hover:text-[#24322c] transition-colors"
-                aria-label="Close report"
-              >
-                <X className="h-4.5 w-4.5" />
-              </button>
-            </div>
-            <SecurityReport report={scanResult} onReset={handleReset} />
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-[#24322c]/40 p-3 sm:p-4 overflow-y-auto">
+          <div className="my-4 w-full max-w-[52rem]">
+            <SecurityReport report={scanResult} onClose={handleReset} onReset={handleReset} />
           </div>
         </div>
       )}

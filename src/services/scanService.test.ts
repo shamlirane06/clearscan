@@ -30,6 +30,24 @@ describe("Heuristic Scan Service & Offline Fallback Engine", () => {
     expect(performClientFallbackAnalysis("http://example.com").warnings.some((w) => w.toLowerCase().includes("http"))).toBe(true);
     expect(performClientFallbackAnalysis("https://account-verify-team.xyz").riskScore).toBeGreaterThanOrEqual(20);
   });
+  it("preserves path and query parameters for test URL and scores correctly", () => {
+    const testUrl = "http://sbi-kyc-update.xyz/verify-account?urgent=true";
+    const report = performClientFallbackAnalysis(testUrl);
+    expect(report.url).toBe(testUrl);
+    expect(report.normalizedHostname).toBe("sbi-kyc-update.xyz");
+    expect(report.riskScore).toBe(56);
+    expect(report.riskClassification).toBe("HIGH_RISK");
+    
+    // Check that path keywords were detected and evidence contains path
+    const pathCheck = report.securityChecks.find((c) => c.checkName === "Suspicious Path Keywords");
+    expect(pathCheck).toBeDefined();
+    expect(pathCheck?.passed).toBe(false);
+    expect(pathCheck?.evidence).toContain("/verify-account");
+
+    // Check that excessive query parameters is NOT triggered for 1 parameter
+    const queryCheck = report.securityChecks.find((c) => c.checkName === "Excessive Query Parameters");
+    expect(queryCheck).toBeUndefined();
+  });
   it("does not fabricate a threat-intelligence result for a Safe Browsing test URL", () => {
     const report = performClientFallbackAnalysis("https://testsafebrowsing.appspot.com/malware");
     expect(report.riskClassification).toBe("LOW_RISK");
